@@ -2,3 +2,55 @@
 @model KTU_forum.Pages.RoomsModel
 @{
 }
+
+<!DOCTYPE html>
+<html lang="en">
+<body class="d-flex flex-column h-100 bg-light">
+    <main class="flex-shrink-0">
+        <!-- Projects Section-->
+        <section class="py-5">
+            <div class="container px-5 mb-5">
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bolder mb-0"><span class="text-gradient d-inline">Rooms</span></h1>
+                </div>
+                <div class="row gx-5 justify-content-center">
+                    <div class="col-lg-11 col-xl-9 col-xxl-8">
+                        <!-- Project Card 1-->
+                        <div class="card overflow-hidden shadow rounded-4 border-0 mb-5">
+                            <div class="card-body p-0">
+                                <div class="d-flex align-items-center">
+                                    <div class="p-5">
+                                        <h2 class="fw-bolder">Mess hall</h2>
+                                        <p>A casual chat with no set theme! Discuss anything from hobbies and upcoming events to movie recommendations and more.</p>
+                                    </div>
+                                    <a asp-page="/MessHall">
+                                        <img class="fixed-size" src=~/assets/MessHall.jpg alt="..." />
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Project Card 2-->
+                        <div class="card overflow-hidden shadow rounded-4 border-0">
+                            <div class="card-body p-0">
+                                <div class="d-flex align-items-center">
+                                    <div class="p-5">
+                                        <h2 class="fw-bolder">Study Room</h2>
+                                        <p>A general chat for all things study-related! Discuss upcoming exams and lab work, share homework help, and support each other in learning.</p>
+                                    </div>
+                                    <a asp-page="/StudyRoom">
+                                        <img class="fixed-size" src="~/assets/class.jpg" alt="..." />
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- Bootstrap core JS-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Core theme JS-->
+    <script src="js/scripts.js"></script>
+</body>
+</html>

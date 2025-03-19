@@ -11731,4 +11731,10 @@ html {
     width: 1.5vw;
     left: -2vw;
   }
+    .fixed-size {
+        width: 150px; /* Set your desired width */
+        height: 150px; /* Set your desired height */
+        object-fit: cover; /* Ensures the image fills the space without distortion */
+        flex-shrink: 0; /* Prevents shrinking in a flex container */
+    }
 }
