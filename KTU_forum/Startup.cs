@@ -33,6 +33,15 @@ namespace KTU_forum
             // Add DbContext with InMemory database for TempDb
             services.AddDbContext<TempDb>(options =>
                 options.UseInMemoryDatabase("TempDb"));
+
+            services.AddRazorPages();
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);  // Session timeout after 30 minutes
+                options.Cookie.HttpOnly = true;  // Helps prevent XSS attacks
+                options.Cookie.IsEssential = true;  // Required for non-logged-in users
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -53,6 +62,9 @@ namespace KTU_forum
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            //enable session management
+            app.UseSession();
 
             app.UseAuthorization();
 

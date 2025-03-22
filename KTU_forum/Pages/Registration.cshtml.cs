@@ -5,31 +5,24 @@ using System.Threading.Tasks;
 using KTU_forum.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Extensions.Logging; // Import for logging
+using BCrypt.Net;
 
 namespace KTU_forum.Pages
 {
     public class RegistrationModel : PageModel
     {
         private readonly Models.TempDb _context;
-
+        private readonly ILogger<RegistrationModel> _logger; // Logger for registration
 
         [BindProperty]
         public User NewUser { get; set; }
 
-
-        /**
-        [BindProperty]
-        public string Email { get; set; }
-        [BindProperty]
-        public string Password { get; set; }
-        **/
-
-
-        public RegistrationModel(Models.TempDb context)
+        public RegistrationModel(Models.TempDb context, ILogger<RegistrationModel> logger)
         {
             _context = context;
+            _logger = logger; // Assign the logger to the field
         }
-
 
         // **API-Like Endpoint for JavaScript to Check Username Uniqueness**
         public JsonResult OnGetCheckUsername(string username)
@@ -40,8 +33,13 @@ namespace KTU_forum.Pages
 
         public IActionResult OnPost()
         {
-            if(!NewUser.email.EndsWith("@ktu.lt"))
+            // Log the registration attempt
+            _logger.LogInformation($"User attempted to register with username: {NewUser.Username}");
+
+            if (!NewUser.email.EndsWith("@ktu.lt"))
             {
+                _logger.LogWarning($"Invalid email domain: {NewUser.email}. Only @ktu.lt emails are allowed.");
+
                 ModelState.AddModelError("Email", "Only emails from @ktu.lt are allowed.");
                 return Page();
             }
@@ -49,17 +47,24 @@ namespace KTU_forum.Pages
             // Check if username already exists
             if (_context.Users.Any(u => u.Username == NewUser.Username))
             {
+                _logger.LogWarning($"Username '{NewUser.Username}' is already taken.");
+
                 ModelState.AddModelError("NewUser.Username", "This username is already taken.");
                 return Page();
             }
+            
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(NewUser.password); // Hash the password before storing it
+                       
+            NewUser.password = hashedPassword; // Store the hashed password in the database
 
             // Save the user (Placeholder since you don't have a real database yet)
             _context.Users.Add(NewUser);
             _context.SaveChanges();
 
-            // Continue with the authentication process (e.g., check password, etc.)
+            // Log successful registration
+            _logger.LogInformation($"User '{NewUser.Username}' successfully registered.");
 
-            return RedirectToPage(); // Redirect after successful login
+            return RedirectToPage("/Login"); // Redirect after successful registration
         }
 
         public void OnGet()
@@ -67,14 +72,11 @@ namespace KTU_forum.Pages
             // Retrieve all users from the in-memory database
             var users = _context.Users.ToList();
 
-            // Output the users to the console or inspect them in the debug output
+            // Log all users (just for debugging or inspection purposes)
             foreach (var user in users)
             {
-                Console.WriteLine($"Username: {user.Username}, Email: {user.email}");
+                _logger.LogInformation($"Retrieved user - Username: {user.Username}, Email: {user.email}");
             }
         }
-
-
     }
-
 }

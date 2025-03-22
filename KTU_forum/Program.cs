@@ -21,6 +21,12 @@ namespace KTU_forum
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
-                });
+                })
+            .ConfigureLogging(logging =>
+            {
+                logging.ClearProviders(); // Clears existing loggers
+                logging.AddConsole();     // Adds console logger
+                logging.AddDebug();       // Adds debug logger (optional)
+            });
     }
 }
