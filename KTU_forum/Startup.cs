@@ -9,6 +9,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.InMemory;
+using KTU_forum.Models;
+
 namespace KTU_forum
 {
     public class Startup
@@ -24,6 +28,11 @@ namespace KTU_forum
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
+
+
+            // Add DbContext with InMemory database for TempDb
+            services.AddDbContext<TempDb>(options =>
+                options.UseInMemoryDatabase("TempDb"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
