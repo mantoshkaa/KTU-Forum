@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.InMemory;
 using KTU_forum.Models;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 namespace KTU_forum
 {
@@ -35,6 +37,7 @@ namespace KTU_forum
                 options.UseInMemoryDatabase("TempDb"));
 
             services.AddRazorPages();
+            services.AddHttpContextAccessor();
             services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);  // Session timeout after 30 minutes
@@ -59,7 +62,12 @@ namespace KTU_forum
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(
+            Path.Combine(Directory.GetCurrentDirectory(), "Images")),
+                RequestPath = "/Images" // URL path to access the images
+            });
 
             app.UseRouting();
 

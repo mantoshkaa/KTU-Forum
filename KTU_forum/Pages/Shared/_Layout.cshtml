@@ -18,6 +18,8 @@
     <link href="css/styles.css" rel="stylesheet" />
 </head>
 <body class="d-flex flex-column h-100">
+    <!-- For accesing login-->
+    @inject IHttpContextAccessor HttpContextAccessor
     <main class="flex-shrink-0">
             <header>
                 <nav class="navbar navbar-expand-lg navbar-light bg-white py-3">
@@ -30,11 +32,25 @@
                                     <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-page="/Login">Login</a>
-                                </li>
-                                <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/Rooms">Rooms</a>
                                 </li>
+                                @if (HttpContextAccessor.HttpContext.Session.GetString("Username") == null)
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-area="" asp-page="/Login">Login</a>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-area="" asp-page="/Profile">Profile</a>
+                                    </li>
+                                <li class="nav-item">
+                                    <form method="post" asp-page="/Login" asp-page-handler="Logout">
+                                        <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+                                    </form>
+                                </li>
+                                }
                             </ul>
                         </div>
                     </div>
