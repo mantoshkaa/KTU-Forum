@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using KTU_forum.Models;
 
 namespace KTU_forum.Data
 {
