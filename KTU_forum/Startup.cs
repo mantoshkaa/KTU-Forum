@@ -30,7 +30,8 @@ namespace KTU_forum
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
-
+            services.AddSignalR(); // Add SignalR services
+            services.AddControllersWithViews(); // Or add your services like MVC
 
             // Add DbContext with InMemory database for TempDb
             services.AddDbContext<TempDb>(options =>
@@ -79,6 +80,7 @@ namespace KTU_forum
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapHub<Hubs.ChatHub>("/chatHub");
             });
         }
     }
