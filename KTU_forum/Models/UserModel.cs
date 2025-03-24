@@ -1,5 +1,6 @@
 ﻿using KTU_forum.Validation;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace KTU_forum.Models
@@ -19,5 +20,9 @@ namespace KTU_forum.Models
         public string PasswordHash { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        //define relationships
+        public List<PostModel> Posts { get; set; } = new(); // One user -> many posts
+
     }
 }

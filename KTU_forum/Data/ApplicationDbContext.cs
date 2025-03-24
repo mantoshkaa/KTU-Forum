@@ -9,5 +9,7 @@ namespace KTU_forum.Data
             : base(options) { }
 
         public DbSet<UserModel> Users { get; set; }
+        public DbSet<PostModel> Posts { get; set; }
+
     }
 }
