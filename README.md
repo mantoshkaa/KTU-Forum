@@ -1,1 +1,1 @@
-A university forum created by a group of 4 people.
+University forum created by a group of 4 people.
