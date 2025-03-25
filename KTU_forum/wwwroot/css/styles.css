@@ -11737,45 +11737,4 @@ html {
         object-fit: cover; /* Ensures the image fills the space without distortion */
         flex-shrink: 0; /* Prevents shrinking in a flex container */
     }
-
-    .messages-container {
-        height: 300px;
-        overflow-y: auto;
-        padding: 10px;
-        background-color: #f8f9fa;
-        border-radius: 5px;
-        margin-bottom: 20px;
-    }
-
-    .message-input-area {
-        margin-top: 15px;
-    }
-
-        .message-input-area input {
-            height: 45px;
-            border-radius: 25px;
-        }
-
-        .message-input-area button {
-            height: 45px;
-            border-radius: 25px;
-            padding: 0 20px;
-            font-size: 16px;
-        }
-
-    /* Optional: Add some styling for the messages list */
-    #messagesList li {
-        padding: 10px;
-        margin-bottom: 10px;
-        background-color: #e9ecef;
-        border-radius: 10px;
-    }
-
-        #messagesList li:nth-child(odd) {
-            background-color: #f1f3f5;
-        }
-
-    .messages-container li {
-        word-wrap: break-word;
-    }
 }
