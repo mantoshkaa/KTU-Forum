@@ -69,6 +69,7 @@ namespace KTU_forum
             Path.Combine(Directory.GetCurrentDirectory(), "Images")),
                 RequestPath = "/Images" // URL path to access the images
             });
+            app.UseStaticFiles(); // FIXES CSS BUG
 
             app.UseRouting();
 
