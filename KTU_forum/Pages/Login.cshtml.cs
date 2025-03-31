@@ -83,7 +83,7 @@ namespace KTU_forum.Pages
             // Log the logout action (you can log the session user information here as well)
             _logger.LogInformation("User logged out successfully.");
 
-            return RedirectToPage("/Login");
+            return RedirectToPage("/Index");
         }
 
         public bool VerifyPassword(string enteredPassword, string storedHashedPassword)
