@@ -1,0 +1,28 @@
+﻿using KTU_forum.Validation;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+namespace KTU_forum.Models
+{
+    public class UserModel
+    {
+        public int Id { get; set; } //primary key
+        [Required]
+        public string Username { get; set; }
+
+        [Required]
+        [EmailAddress]
+        [EmailDomain("ktu.lt")] //only allow this domain
+        public string Email { get; set; }
+
+        [Required]
+        public string PasswordHash { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        //define relationships
+        public List<PostModel> Posts { get; set; } = new(); // One user -> many posts
+
+    }
+}
