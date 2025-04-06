@@ -1,0 +1,15 @@
+**/.classpath
+**/.dockerignore
+**/.env
+**/.git
+**/.gitignore
+**/.project
+**/.settings
+**/.toolstarget
+**/*.mdf
+**/*.vscode
+bin/
+obj/
+*.user
+*.suo
+*.sln.docstates
