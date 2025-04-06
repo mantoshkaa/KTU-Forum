@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging; // Import for logging
 using BCrypt.Net;
 using KTU_forum.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace KTU_forum.Pages
 {
@@ -68,16 +69,25 @@ namespace KTU_forum.Pages
             return RedirectToPage("/Login"); // Redirect after successful registration
         }
 
-        public void OnGet()
+        public async Task OnGetAsync()
         {
-            // Retrieve all users from the DATABASE
-            var users = _context.Users.ToList();
-
-            // Log all users (just for debugging or inspection purposes)
-            foreach (var user in users)
+            try
             {
-                _logger.LogInformation($"Retrieved user - Username: {user.Username}, Email: {user.Email}");
+                // Retrieve all users from the DATABASE asynchronously
+                var users = await _context.Users.ToListAsync();
+
+                // Log all users (just for debugging or inspection purposes)
+                foreach (var user in users)
+                {
+                    _logger.LogInformation($"Retrieved user - Username: {user.Username}, Email: {user.Email}");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log any errors that occur during the database retrieval
+                _logger.LogError($"An error occurred while retrieving users: {ex.Message}");
             }
         }
+
     }
 }

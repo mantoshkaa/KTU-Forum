@@ -39,9 +39,6 @@ namespace KTU_forum
             services.AddSignalR(); // Add SignalR services
             services.AddControllersWithViews(); // Or add your services like MVC
 
-            // Add DbContext with InMemory database for TempDb
-            services.AddDbContext<TempDb>(options =>
-                options.UseInMemoryDatabase("TempDb"));
 
             services.AddRazorPages();
             services.AddHttpContextAccessor();
