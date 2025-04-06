@@ -12,6 +12,9 @@ COPY . ./
 WORKDIR /app/KTU_forum
 RUN dotnet publish -c Release -o out
 
+COPY ./Images /app/Images
+
+
 # Use a runtime-only image for production
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
 WORKDIR /app
