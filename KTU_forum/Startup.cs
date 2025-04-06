@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore.InMemory;
 using KTU_forum.Models;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
+using KTU_forum.Data;
 
 namespace KTU_forum
 {
@@ -29,6 +30,11 @@ namespace KTU_forum
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseNpgsql(connectionString));
+
+
             services.AddRazorPages();
             services.AddSignalR(); // Add SignalR services
             services.AddControllersWithViews(); // Or add your services like MVC
