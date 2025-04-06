@@ -12,7 +12,6 @@ COPY . ./
 WORKDIR /app/KTU_forum
 RUN dotnet publish -c Release -o out
 
-COPY ./Images /app/Images
 
 
 # Use a runtime-only image for production

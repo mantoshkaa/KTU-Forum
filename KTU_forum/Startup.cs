@@ -65,9 +65,6 @@ namespace KTU_forum
             app.UseHttpsRedirection();
             app.UseStaticFiles(new StaticFileOptions
             {
-                FileProvider = new PhysicalFileProvider(
-            Path.Combine(Directory.GetCurrentDirectory(), "Images")),
-                RequestPath = "/Images" // URL path to access the images
             });
             app.UseStaticFiles(); // FIXES CSS BUG
 

@@ -94,7 +94,6 @@ namespace KTU_forum.Pages
                     }
 
                     // Update the profile picture path in the database
-                    CurrentUser.profilePicturePath = "/Images/" + NewProfilePicture.FileName;
                     _context.Users.Update(CurrentUser);
                     await _context.SaveChangesAsync();
                 }
