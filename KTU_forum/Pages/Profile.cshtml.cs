@@ -88,17 +88,17 @@ namespace KTU_forum.Pages
                 // Update profile picture if provided
                 if (NewProfilePicture != null)
                 {
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", NewProfilePicture.FileName); // Adjust path to "wwwroot/images"
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "profile-pictures", NewProfilePicture.FileName); // Adjust path to "wwwroot/images"
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await NewProfilePicture.CopyToAsync(stream);
                     }
 
                     // Update the profile picture path in the database
-                    CurrentUser.ProfilePicturePath = $"/images/{NewProfilePicture.FileName}";
-                    _context.Users.Update(CurrentUser);
-                    await _context.SaveChangesAsync();
+                    CurrentUser.ProfilePicturePath = "/profile-pictures/" + NewProfilePicture.FileName;
                 }
+                _context.Users.Update(CurrentUser);
+                await _context.SaveChangesAsync();
 
                 return RedirectToPage(); // Reload the page with updated user info
             }
