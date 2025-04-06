@@ -34,13 +34,13 @@
                 <div class="row">
                     <!-- Profile Picture and Username Section -->
                     <div class="col-md-4 text-center">
-                        @if (string.IsNullOrEmpty(user.profilePicturePath))
+                        @if (string.IsNullOrEmpty(user.ProfilePicturePath))
                         {
                             <i class="bi bi-person-circle" style="font-size: 9rem;"></i> <!-- Default Profile Icon -->
                         }
                         else
                         {
-                            <img src="@user.profilePicturePath" alt="Profile Picture" class="rounded-circle" style="width: 9rem; height: 9rem; object-fit: cover;" />
+                            <img src="@user.ProfilePicturePath" alt="Profile Picture" class="rounded-circle" style="width: 9rem; height: 9rem; object-fit: cover;" />
                         }
                         <h3 class="mt-3">@user.Username</h3>
                         <!-- Button to trigger modal to change profile picture -->
@@ -60,7 +60,7 @@
 
                                     <div class="mb-3">
                                         <label for="Email" class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="Email" value="@user.email" readonly />
+                                        <input type="email" class="form-control" id="Email" value="@user.Email" readonly />
                                     </div>
 
                                     <!-- Change Password Section -->

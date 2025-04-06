@@ -21,6 +21,8 @@ namespace KTU_forum.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public string ProfilePicturePath { get; set; } // Add this property
+
         //define relationships
         public List<PostModel> Posts { get; set; } = new(); // One user -> many posts
 

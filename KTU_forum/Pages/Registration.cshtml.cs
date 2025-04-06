@@ -7,21 +7,22 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging; // Import for logging
 using BCrypt.Net;
+using KTU_forum.Data;
 
 namespace KTU_forum.Pages
 {
     public class RegistrationModel : PageModel
     {
-        private readonly Models.TempDb _context;
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<RegistrationModel> _logger; // Logger for registration
 
         [BindProperty]
-        public User NewUser { get; set; }
+        public UserModel NewUser { get; set; }
 
-        public RegistrationModel(Models.TempDb context, ILogger<RegistrationModel> logger)
+        public RegistrationModel(ApplicationDbContext context, ILogger<RegistrationModel> logger)
         {
             _context = context;
-            _logger = logger; // Assign the logger to the field
+            _logger = logger;
         }
 
         // **API-Like Endpoint for JavaScript to Check Username Uniqueness**
@@ -36,9 +37,9 @@ namespace KTU_forum.Pages
             // Log the registration attempt
             _logger.LogInformation($"User attempted to register with username: {NewUser.Username}");
 
-            if (!NewUser.email.EndsWith("@ktu.lt"))
+            if (!NewUser.Email.EndsWith("@ktu.lt"))
             {
-                _logger.LogWarning($"Invalid email domain: {NewUser.email}. Only @ktu.lt emails are allowed.");
+                _logger.LogWarning($"Invalid email domain: {NewUser.Email}. Only @ktu.lt emails are allowed.");
 
                 ModelState.AddModelError("Email", "Only emails from @ktu.lt are allowed.");
                 return Page();
@@ -53,9 +54,9 @@ namespace KTU_forum.Pages
                 return Page();
             }
             
-            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(NewUser.password); // Hash the password before storing it
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(NewUser.PasswordHash); // Hash the password before storing it
                        
-            NewUser.password = hashedPassword; // Store the hashed password in the database
+            NewUser.PasswordHash = hashedPassword; // Store the hashed password in the database
 
             // Save the user (Placeholder since you don't have a real database yet)
             _context.Users.Add(NewUser);
@@ -69,13 +70,13 @@ namespace KTU_forum.Pages
 
         public void OnGet()
         {
-            // Retrieve all users from the in-memory database
+            // Retrieve all users from the DATABASE
             var users = _context.Users.ToList();
 
             // Log all users (just for debugging or inspection purposes)
             foreach (var user in users)
             {
-                _logger.LogInformation($"Retrieved user - Username: {user.Username}, Email: {user.email}");
+                _logger.LogInformation($"Retrieved user - Username: {user.Username}, Email: {user.Email}");
             }
         }
     }

@@ -1,32 +1,30 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using KTU_forum.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using BCrypt.Net;
+using KTU_forum.Data;
 
 namespace KTU_forum.Pages
 {
     public class LoginModel : PageModel
     {
-        private readonly TempDb _context;
+        private readonly ApplicationDbContext _context; // Use ApplicationDbContext
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(TempDb context, ILogger<LoginModel> logger)
+        public LoginModel(ApplicationDbContext context, ILogger<LoginModel> logger)
         {
             _context = context;
             _logger = logger;
         }
 
-
         [BindProperty]
         public string Username { get; set; }
         [BindProperty]
         public string Password { get; set; }
-
 
         public void OnGet()
         {
@@ -35,32 +33,28 @@ namespace KTU_forum.Pages
 
         public IActionResult OnPost()
         {
-
-            // Check if user exists
+            // Check if user exists in the real PostgreSQL database
             var user = _context.Users.FirstOrDefault(u => u.Username == Username);
 
-            if (user != null && VerifyPassword(Password, user.password))
+            if (user != null && VerifyPassword(Password, user.PasswordHash))
             {
                 // Create session
-                HttpContext.Session.SetString("Username", user.Username); // Store username in session
-                //HttpContext.Session.SetString("UserRole", "User"); // Optionally store user role or other data
+                HttpContext.Session.SetString("Username", user.Username);
 
                 // Create a cookie to store authentication information
                 var cookieOptions = new CookieOptions
                 {
-                    Expires = DateTime.Now.AddMinutes(30), 
-                    HttpOnly = true, // Makes the cookie inaccessible to JavaScript (for security)
-                    Secure = true, // Only send cookie over HTTPS (for production)
-                    SameSite = SameSiteMode.Strict // Prevents CSRF attacks
+                    Expires = DateTime.Now.AddMinutes(30),
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict
                 };
 
                 // Store user data in cookies
                 Response.Cookies.Append("Username", user.Username, cookieOptions);
 
-
-                // Log successful login attempt (you can also log the IP address or user agent for auditing)
+                // Log successful login attempt
                 _logger.LogInformation($"User {Username} logged in successfully.");
-                // Redirect after successful login
                 return RedirectToPage("/Rooms");
             }
 
@@ -70,8 +64,8 @@ namespace KTU_forum.Pages
             // Invalid login
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return Page();
-        
         }
+
         public IActionResult OnPostLogout()
         {
             // Clear session data
@@ -80,7 +74,7 @@ namespace KTU_forum.Pages
             // Delete cookies
             Response.Cookies.Delete("Username");
 
-            // Log the logout action (you can log the session user information here as well)
+            // Log the logout action
             _logger.LogInformation("User logged out successfully.");
 
             return RedirectToPage("/Index");
@@ -91,5 +85,4 @@ namespace KTU_forum.Pages
             return BCrypt.Net.BCrypt.Verify(enteredPassword, storedHashedPassword);
         }
     }
-
 }

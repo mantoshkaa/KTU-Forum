@@ -1,28 +1,29 @@
 using KTU_forum.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using System.Threading.Tasks;
 using BCrypt.Net;
 using System.Linq;
+using KTU_forum.Data;
 
 namespace KTU_forum.Pages
 {
     public class ProfileModel : PageModel
     {
-        private readonly TempDb _context;
+        private readonly ApplicationDbContext _context; // Use ApplicationDbContext
         private readonly ILogger<ProfileModel> _logger;
 
-        public ProfileModel(TempDb context, ILogger<ProfileModel> logger)
+        public ProfileModel(ApplicationDbContext context, ILogger<ProfileModel> logger)
         {
             _context = context;
             _logger = logger;
         }
 
         // To hold user data
-        public User CurrentUser { get; set; }
+        public UserModel CurrentUser { get; set; }
 
         // Profile picture upload property
         [BindProperty]
@@ -79,7 +80,7 @@ namespace KTU_forum.Pages
                 // Update password if provided
                 if (!string.IsNullOrEmpty(NewPassword))
                 {
-                    CurrentUser.password = BCrypt.Net.BCrypt.HashPassword(NewPassword);
+                    CurrentUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(NewPassword);
                     _context.Users.Update(CurrentUser);
                     await _context.SaveChangesAsync();
                 }
@@ -87,13 +88,14 @@ namespace KTU_forum.Pages
                 // Update profile picture if provided
                 if (NewProfilePicture != null)
                 {
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "Images", NewProfilePicture.FileName);
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", NewProfilePicture.FileName); // Adjust path to "wwwroot/images"
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await NewProfilePicture.CopyToAsync(stream);
                     }
 
                     // Update the profile picture path in the database
+                    CurrentUser.ProfilePicturePath = $"/images/{NewProfilePicture.FileName}";
                     _context.Users.Update(CurrentUser);
                     await _context.SaveChangesAsync();
                 }
@@ -103,8 +105,5 @@ namespace KTU_forum.Pages
 
             return Page(); // Return the page if there were errors
         }
-
     }
-
-
 }
