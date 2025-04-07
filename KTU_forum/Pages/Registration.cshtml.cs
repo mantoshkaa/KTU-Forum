@@ -11,6 +11,7 @@ using KTU_forum.Data;
 using Microsoft.EntityFrameworkCore;
 using MailKit.Net.Smtp;
 using MimeKit;
+using MailKit.Security;
 
 
 namespace KTU_forum.Pages
@@ -110,7 +111,7 @@ namespace KTU_forum.Pages
         private async Task SendVerificationEmailAsync(string email, string verificationLink)
         {
             var message = new MimeMessage();
-            message.From.Add(MailboxAddress.Parse("your@email.com"));
+            message.From.Add(MailboxAddress.Parse("ktu.forum.test@gmail.com"));
             message.To.Add(MailboxAddress.Parse(email));
             message.Subject = "KTU Forum - Verify your Email";
             message.Body = new TextPart("plain")
@@ -119,8 +120,8 @@ namespace KTU_forum.Pages
             };
 
             using var smtp = new SmtpClient();
-            await smtp.ConnectAsync("smtp.yourmailprovider.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-            await smtp.AuthenticateAsync("your@email.com", "your-email-password");
+            await smtp.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+            await smtp.AuthenticateAsync("ktu.forum.test@gmail.com", "erub womf uykd bhdo");
             await smtp.SendAsync(message);
             await smtp.DisconnectAsync(true);
         }
