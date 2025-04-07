@@ -59,7 +59,12 @@ namespace KTU_forum.Pages
                        
             NewUser.PasswordHash = hashedPassword; // Store the hashed password in the database
 
-            // Save the user (Placeholder since you don't have a real database yet)
+            string token = Guid.NewGuid().ToString(); // or use any secure generator
+            NewUser.EmailVerificationToken = token;
+            NewUser.IsVerified = false;
+
+
+            // Save the user 
             _context.Users.Add(NewUser);
             _context.SaveChanges();
 

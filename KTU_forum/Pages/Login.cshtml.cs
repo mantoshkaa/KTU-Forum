@@ -49,6 +49,16 @@ namespace KTU_forum.Pages
                     Secure = true,
                     SameSite = SameSiteMode.Strict
                 };
+                /*
+                // Check if the user is verified
+                if (!user.IsVerified)
+                {
+                    ModelState.AddModelError(string.Empty, "Please verify your email before logging in.");
+                    return Page();
+                }
+                */
+                
+                //palieku kaip komentara darbar nes kolkas no one is verified :D 
 
                 // Store user data in cookies
                 Response.Cookies.Append("Username", user.Username, cookieOptions);
