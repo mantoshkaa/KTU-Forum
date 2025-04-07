@@ -9,6 +9,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.InMemory;
+using KTU_forum.Models;
+using Microsoft.Extensions.FileProviders;
+using System.IO;
+using KTU_forum.Data;
+
 namespace KTU_forum
 {
     public class Startup
@@ -23,7 +30,25 @@ namespace KTU_forum
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseNpgsql(connectionString));
+
+
             services.AddRazorPages();
+            services.AddSignalR(); // Add SignalR services
+            services.AddControllersWithViews(); // Or add your services like MVC
+
+
+            services.AddRazorPages();
+            services.AddHttpContextAccessor();
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);  // Session timeout after 30 minutes
+                options.Cookie.HttpOnly = true;  // Helps prevent XSS attacks
+                options.Cookie.IsEssential = true;  // Required for non-logged-in users
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -41,15 +66,22 @@ namespace KTU_forum
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions
+            {
+            });
+            app.UseStaticFiles(); // FIXES CSS BUG
 
             app.UseRouting();
+
+            //enable session management
+            app.UseSession();
 
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapHub<Hubs.ChatHub>("/chatHub");
             });
         }
     }
