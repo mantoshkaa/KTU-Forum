@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging; // Import for logging
 using BCrypt.Net;
 using KTU_forum.Data;
 using Microsoft.EntityFrameworkCore;
+using MailKit.Net.Smtp;
+using MimeKit;
+
 
 namespace KTU_forum.Pages
 {
@@ -33,7 +36,7 @@ namespace KTU_forum.Pages
             return new JsonResult(new { isTaken = exists });
         }
 
-        public IActionResult OnPost()
+        public async Task<IActionResult> OnPostAsync()
         {
             // Log the registration attempt
             _logger.LogInformation($"User attempted to register with username: {NewUser.Username}");
@@ -68,6 +71,17 @@ namespace KTU_forum.Pages
             _context.Users.Add(NewUser);
             _context.SaveChanges();
 
+            // Generate verification URL
+            var verificationUrl = Url.Page(
+                "/EmailVerification",
+                null,
+                new { token = NewUser.EmailVerificationToken },
+                Request.Scheme
+            );
+
+            // Send the email
+            await SendVerificationEmailAsync(NewUser.Email, verificationUrl);
+
             // Log successful registration
             _logger.LogInformation($"User '{NewUser.Username}' successfully registered.");
 
@@ -93,6 +107,24 @@ namespace KTU_forum.Pages
                 _logger.LogError($"An error occurred while retrieving users: {ex.Message}");
             }
         }
+        private async Task SendVerificationEmailAsync(string email, string verificationLink)
+        {
+            var message = new MimeMessage();
+            message.From.Add(MailboxAddress.Parse("your@email.com"));
+            message.To.Add(MailboxAddress.Parse(email));
+            message.Subject = "KTU Forum - Verify your Email";
+            message.Body = new TextPart("plain")
+            {
+                Text = $"Click the following link to verify your email: {verificationLink}"
+            };
+
+            using var smtp = new SmtpClient();
+            await smtp.ConnectAsync("smtp.yourmailprovider.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+            await smtp.AuthenticateAsync("your@email.com", "your-email-password");
+            await smtp.SendAsync(message);
+            await smtp.DisconnectAsync(true);
+        }
+
 
     }
 }
