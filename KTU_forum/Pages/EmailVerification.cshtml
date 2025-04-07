@@ -14,11 +14,11 @@
     <div class="container text-center">
         <h2>Email Verification</h2>
 
-        @if (Model.IsVerified)
+        @if (Model.VerificationSucceeded)
         {
             <div class="alert alert-success">Your email has been successfully verified! You can now <a href="/Login">log in</a>.</div>
         }
-        else
+        else if (Model.VerificationFailed)
         {
             <div class="alert alert-danger">Verification failed or token is invalid.</div>
         }

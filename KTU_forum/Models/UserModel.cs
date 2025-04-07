@@ -23,6 +23,7 @@ namespace KTU_forum.Models
 
         public string ProfilePicturePath { get; set; }
 
+        public string EmailVerificationToken { get; set; }
         public bool IsVerified { get; set; }
 
         //define relationships

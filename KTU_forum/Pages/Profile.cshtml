@@ -2,6 +2,14 @@
 @model KTU_forum.Pages.ProfileModel
 @{
     var user = Model.CurrentUser;
+    var successMessage = TempData["SuccessMessage"] as string;
+}
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success" role="alert">
+        @successMessage
+    </div>
 }
 
 <!DOCTYPE html>
@@ -34,13 +42,13 @@
                 <div class="row">
                     <!-- Profile Picture and Username Section -->
                     <div class="col-md-4 text-center">
-                        @if (string.IsNullOrEmpty(user.ProfilePicturePath))
+                        @if (string.IsNullOrEmpty(Model.CurrentUser.ProfilePicturePath))
                         {
                             <i class="bi bi-person-circle" style="font-size: 9rem;"></i> <!-- Default Profile Icon -->
                         }
                         else
                         {
-                            <img src="@user.ProfilePicturePath" alt="Profile Picture" class="rounded-circle" style="width: 9rem; height: 9rem; object-fit: cover;" />
+                            <img src="@Model.CurrentUser.ProfilePicturePath" alt="Profile Picture" class="rounded-circle" style="width: 9rem; height: 9rem; object-fit: cover;" />
                         }
                         <h3 class="mt-3">@user.Username</h3>
                         <!-- Button to trigger modal to change profile picture -->

@@ -77,6 +77,7 @@ namespace KTU_forum.Pages
 
             if (ModelState.IsValid)
             {
+
                 // Update password if provided
                 if (!string.IsNullOrEmpty(NewPassword))
                 {
@@ -97,14 +98,20 @@ namespace KTU_forum.Pages
                     // Update the profile picture path in the database
                     CurrentUser.ProfilePicturePath = "/profile-pictures/" + NewProfilePicture.FileName;
                 }
+
+                // Save changes
                 _context.Users.Update(CurrentUser);
                 await _context.SaveChangesAsync();
+
+                // Set confirmation message in TempData
+                TempData["SuccessMessage"] = "Your profile has been updated successfully.";
 
                 return RedirectToPage(); // Reload the page with updated user info
             }
 
             return Page(); // Return the page if there were errors
         }
+
 
         public async Task<IActionResult> OnPostDeleteAsync()
         {
@@ -144,7 +151,5 @@ namespace KTU_forum.Pages
             HttpContext.Session.Clear();
             return RedirectToPage("/Index");
         }
-
-
     }
 }
