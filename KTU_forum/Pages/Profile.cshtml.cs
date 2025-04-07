@@ -105,5 +105,46 @@ namespace KTU_forum.Pages
 
             return Page(); // Return the page if there were errors
         }
+
+        public async Task<IActionResult> OnPostDeleteAsync()
+        {
+            // Get logged-in username from session
+            string loggedInUsername = HttpContext.Session.GetString("Username");
+
+            if (string.IsNullOrEmpty(loggedInUsername))
+            {
+                _logger.LogWarning("No user is logged in.");
+                return RedirectToPage("/Login");
+            }
+
+            // Find the user in the database
+            var userToDelete = _context.Users.FirstOrDefault(u => u.Username == loggedInUsername);
+
+            if (userToDelete == null)
+            {
+                _logger.LogWarning($"User with Username {loggedInUsername} not found for deletion.");
+                return RedirectToPage("/Error");
+            }
+
+            // Optional: Delete profile picture file if it exists
+            if (!string.IsNullOrEmpty(userToDelete.ProfilePicturePath))
+            {
+                var picturePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", userToDelete.ProfilePicturePath.TrimStart('/'));
+                if (System.IO.File.Exists(picturePath))
+                {
+                    System.IO.File.Delete(picturePath);
+                }
+            }
+
+            // Remove user from the database
+            _context.Users.Remove(userToDelete);
+            await _context.SaveChangesAsync();
+
+            // Clear session and redirect to homepage
+            HttpContext.Session.Clear();
+            return RedirectToPage("/Index");
+        }
+
+
     }
 }
