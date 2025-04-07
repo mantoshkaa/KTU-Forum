@@ -65,6 +65,7 @@ namespace KTU_forum
                 app.UseHsts();
             }
 
+
             app.UseHttpsRedirection();
             app.UseStaticFiles(new StaticFileOptions
             {
@@ -83,6 +84,9 @@ namespace KTU_forum
                 endpoints.MapRazorPages();
                 endpoints.MapHub<Hubs.ChatHub>("/chatHub");
             });
+
+
+
         }
     }
 }

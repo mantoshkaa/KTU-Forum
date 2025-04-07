@@ -28,5 +28,6 @@ namespace KTU_forum
                 logging.AddConsole();     // Adds console logger
                 logging.AddDebug();       // Adds debug logger (optional)
             });
+
     }
 }
