@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using KTU_forum.Models;
@@ -22,5 +23,8 @@ namespace KTU_forum.Models
         //Foreign Key: which user created this post
         public int UserId { get; set; }
         public UserModel User { get; set; }
+
+        public List<ReplyModel> Replies { get; set; } = new();
+
     }
 }
