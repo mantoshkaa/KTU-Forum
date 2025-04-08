@@ -19,6 +19,8 @@ namespace KTU_forum.Models
 
         public DateTime SentAt { get; set; } = DateTime.UtcNow; // when was it sent
 
+        public int Likes { get; set; } = 0;
+
         [CustomValidation(typeof(MessageModel), nameof(ValidateContentOrImage))]
         public object ValidationCheck => null;
 
