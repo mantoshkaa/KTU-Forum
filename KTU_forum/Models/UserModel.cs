@@ -21,6 +21,8 @@ namespace KTU_forum.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public string Role { get; set; }
+
         public string ProfilePicturePath { get; set; }
 
         public string EmailVerificationToken { get; set; } // for verifying email

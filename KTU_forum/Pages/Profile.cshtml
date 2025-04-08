@@ -50,7 +50,13 @@
                         {
                             <img src="@Model.CurrentUser.ProfilePicturePath" alt="Profile Picture" class="rounded-circle" style="width: 9rem; height: 9rem; object-fit: cover;" />
                         }
-                        <h3 class="mt-3">@user.Username</h3>
+                        <h3 class="mt-3 d-flex justify-content-center align-items-center">
+                            @user.Username
+                            @if (!string.IsNullOrEmpty(Model.CurrentUser.Role))
+                            {
+                                <span class="badge bg-success text-white ms-2" style="opacity: 0.4; font-size: 1rem;">@Model.CurrentUser.Role</span>
+                            }
+                        </h3>
                         <!-- Button to trigger modal to change profile picture -->
                         <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#changeProfilePicModal">Change Profile Picture</button>
                     </div>
