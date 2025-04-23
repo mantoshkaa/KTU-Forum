@@ -3,6 +3,9 @@
 @{
 }
 
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,22 +42,25 @@
                             <form method="post">
                                 <!-- Username address input-->
                                 <div class="form-floating mb-3">
-                                    <input class="form-control" id="Username" name="Username" type="text" placeholder="Enter your Username" required />
+                                    <input asp-for="Username" class="form-control" id="Username" name="Username" type="text" placeholder="Enter your Username" required />
                                     <label for="Username">Username</label>
                                     <div class="invalid-feedback">A username is required.</div>
-                                    <div class="invalid-feedback" data-sb-feedback="username:required">Username is not valid.</div>
+                                    <span asp-validation-for="Username" class="text-danger"></span>
+
                                 </div>
                                 <!-- Password input-->
                                 <div class="form-floating mb-3">
                                     <input class="form-control" id="Password" name="Password" type="password" placeholder="Enter your password" required />
                                     <label for="Password">Password</label>
-                                    <div class="invalid-feedback" data-sb-feedback="password:required">A password is required.</div>
+                                    <span asp-validation-for="Password" class="text-danger"></span>
+
                                 </div>
                                 <!-- Password Visibility Toggle -->
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="ShowPassword" />
                                     <label class="form-check-label" for="ShowPassword">Show password</label>
                                 </div>
+                                <br />
                                 <!-- Submit Button-->
                                 <div class="d-grid">
                                     <button class="btn btn-primary btn-lg" type="submit">Login</button>

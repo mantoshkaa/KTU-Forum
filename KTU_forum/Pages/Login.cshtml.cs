@@ -36,6 +36,23 @@ namespace KTU_forum.Pages
             // Check if user exists in the real PostgreSQL database
             var user = _context.Users.FirstOrDefault(u => u.Username == Username);
 
+            if (user == null)
+            {
+                // Username doesn't exist
+                ModelState.AddModelError("Username", "No account found with this username.");
+                _logger.LogWarning($"Login attempt with non-existent username: {Username}.");
+                return Page();
+            }
+
+            // Check if the password is correct
+            if (!VerifyPassword(Password, user.PasswordHash))
+            {
+                // Password incorrect
+                ModelState.AddModelError("Password", "Incorrect password.");
+                _logger.LogWarning($"Incorrect password for user {Username}.");
+                return Page();
+            }
+
             if (user != null && VerifyPassword(Password, user.PasswordHash))
             {
                 // Create session
