@@ -66,7 +66,8 @@ namespace KTU_forum.Pages
 
             // Send the email using SMTP directly
             var smtpHost = "smtp.gmail.com"; // Your SMTP server
-            var smtpPort = 587; // SMTP Port
+            var smtpPort = 465; // SMTP Port
+
             var smtpUser = "ktu.forum.test@gmail.com"; // Your email
             var smtpPassword = "erub womf uykd bhdo"; // Your email password
 
@@ -75,25 +76,36 @@ namespace KTU_forum.Pages
 
             using (var smtpClient = new SmtpClient(smtpHost))
             {
-                smtpClient.Port = smtpPort;
+
+                smtpClient.Host = "smtp.gmail.com";
+                smtpClient.Port = 587;
+                smtpClient.EnableSsl = true; // This enables STARTTLS
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(smtpUser, smtpPassword);
-                smtpClient.EnableSsl = true;
 
                 using (var message = new MailMessage(fromAddress, toAddress)
+                //using (var message = new MailMessage(fromAddress, new MailAddress("gintarejasiuk@gmail.com"))
                 {
                     Subject = "Password Reset Request",
                     Body = $"To reset your password, click the link below:\n\n{resetLink}\n\nThis link will expire in 1 hour."
                 })
-                {
-                    await smtpClient.SendMailAsync(message);
-                }
+
+                    try
+                    {
+                        await smtpClient.SendMailAsync(message);
+
+                        // Log the password reset request
+                        _logger.LogInformation($"Password reset link sent to {Email}");
+
+                        // Show the message to the user
+                        Message = "If an account with that email exists, we have sent a password reset link.";
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to send password reset email.");
+                        Error = "Failed to send reset link. Please try again later.";
+                    }
             }
-
-            // Log the password reset request
-            _logger.LogInformation($"Password reset link sent to {Email}");
-
-            // Show the message to the user
-            Message = "If an account with that email exists, we have sent a password reset link.";
 
             return Page();
         }

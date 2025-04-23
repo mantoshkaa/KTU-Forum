@@ -111,12 +111,12 @@ namespace KTU_forum.Pages
         private async Task SendVerificationEmailAsync(string email, string verificationLink)
         {
             var message = new MimeMessage();
-            message.From.Add(MailboxAddress.Parse("ktu.forum.test@gmail.com"));
+            message.From.Add(new MailboxAddress("KTU Forum", "ktu.forum.test@gmail.com"));
             message.To.Add(MailboxAddress.Parse(email));
-            message.Subject = "KTU Forum - Verify your Email";
+            message.Subject = "Email Verification Request";
             message.Body = new TextPart("plain")
             {
-                Text = $"Click the following link to verify your email: {verificationLink}"
+                Text = $"To verify your email, click the link below:\n\n{verificationLink}\n\nIf you did not create an account, you can ignore this email."
             };
 
             using var smtp = new SmtpClient();
