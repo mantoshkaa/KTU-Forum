@@ -23,13 +23,20 @@ function endSession() {
     // Create a form dynamically
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/Login?handler=Logout';  // Use `?handler=Logout` to call the OnPostLogout handler
+    form.action = '/Login?handler=Logout';  // The correct handler for logout
 
+    // Optionally add an anti-forgery token if needed
+    const tokenInput = document.createElement('input');
+    tokenInput.type = 'hidden';
+    tokenInput.name = '__RequestVerificationToken';
+    tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]').value;  // Grab token from the page
+    form.appendChild(tokenInput);
 
     // Append the form to the body and submit it
     document.body.appendChild(form);
-    form.submit(); // This triggers the logout action
+    form.submit(); // This triggers the OnPostLogout action
 }
+
 
 
 
