@@ -28,6 +28,7 @@ namespace KTU_forum.Pages
 
         public void OnGet()
         {
+
             ModelState.Clear();  // Clear any previous ModelState errors
         }
 
@@ -61,7 +62,7 @@ namespace KTU_forum.Pages
                 // Create a cookie to store authentication information
                 var cookieOptions = new CookieOptions
                 {
-                    Expires = DateTime.Now.AddMinutes(30),
+                    Expires = DateTime.Now.AddMinutes(2),
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict
@@ -104,7 +105,7 @@ namespace KTU_forum.Pages
             // Log the logout action
             _logger.LogInformation("User logged out successfully.");
 
-            return RedirectToPage("/Index");
+            return RedirectToPage("/Login");
         }
 
         public bool VerifyPassword(string enteredPassword, string storedHashedPassword)

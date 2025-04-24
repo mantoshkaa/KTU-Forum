@@ -15,6 +15,7 @@ using KTU_forum.Models;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
 using KTU_forum.Data;
+using Microsoft.AspNetCore.Http;
 
 namespace KTU_forum
 {
@@ -44,7 +45,7 @@ namespace KTU_forum
             services.AddHttpContextAccessor();
             services.AddSession(options =>
             {
-                options.IdleTimeout = TimeSpan.FromMinutes(30);  // Session timeout after 30 minutes
+                options.IdleTimeout = TimeSpan.FromMinutes(2);  // Session timeout after 30 minutes
                 options.Cookie.HttpOnly = true;  // Helps prevent XSS attacks
                 options.Cookie.IsEssential = true;  // Required for non-logged-in users
             });
@@ -76,6 +77,24 @@ namespace KTU_forum
 
             //enable session management
             app.UseSession();
+
+            // Define KeepAlive endpoint
+            app.UseEndpoints(endpoints =>
+            {
+                // Existing routes
+                endpoints.MapRazorPages();
+                endpoints.MapHub<Hubs.ChatHub>("/chatHub");
+
+                // Add the /KeepAlive endpoint to reset session expiration
+                endpoints.MapGet("/KeepAlive", async context =>
+                {
+                    // Simply touch the session to reset its expiration
+                    context.Session.SetString("KeepAlive", "true");
+
+                    // Optionally, you can send a response (not necessary for keep-alive)
+                    await Task.CompletedTask;
+                });
+            });
 
             app.UseAuthorization();
 

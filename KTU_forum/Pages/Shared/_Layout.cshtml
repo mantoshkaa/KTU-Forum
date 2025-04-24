@@ -74,7 +74,25 @@
             <script src="~/lib/jquery/dist/jquery.min.js"></script>
             <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
             <script src="~/js/scripts.js" asp-append-version="true"></script>
+            <script src="~/js/session-manager.js"></script>
 
             @await RenderSectionAsync("Scripts", required: false)
+    <!-- Session Timeout Modal -->
+    <div class="modal fade" id="sessionTimeoutModal" tabindex="-1" aria-labelledby="sessionTimeoutLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="sessionTimeoutLabel">Session Expiring Soon</h5>
+                </div>
+                <div class="modal-body">
+                    Your session is about to expire due to inactivity.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="endSession()">Log Out</button>
+                    <button type="button" class="btn btn-primary" onclick="extendSession()">Stay Logged In</button>
+                </div>
+            </div>
+        </div>
+    </div>
         </body>
 </html>
