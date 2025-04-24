@@ -33,12 +33,15 @@ namespace KTU_forum.Pages
         public bool ResetSucceeded { get; set; } = false;
         public bool ResetFailed { get; set; } = false;
 
+        public bool TokenInvalidOrExpired { get; set; } = false;
+
         public async Task<IActionResult> OnGetAsync()
         {
             // Check if the token is provided
             if (string.IsNullOrEmpty(Token))
             {
                 ResetFailed = true;
+                TokenInvalidOrExpired = true;
                 _logger.LogWarning("Reset token was missing from the request.");
                 return Page();
             }
@@ -51,6 +54,7 @@ namespace KTU_forum.Pages
             if (user == null)
             {
                 ResetFailed = true;
+                TokenInvalidOrExpired = true;
                 _logger.LogWarning("Invalid or expired reset token: {Token}", Token);
                 return Page();
             }
@@ -72,6 +76,7 @@ namespace KTU_forum.Pages
             if (NewPassword != ConfirmPassword)
             {
                 ResetFailed = true;
+                TokenInvalidOrExpired = false; // this is not a token error
                 _logger.LogWarning("Password and confirmation do not match.");
                 return Page();
             }
