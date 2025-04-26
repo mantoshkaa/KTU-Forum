@@ -1,5 +1,5 @@
-﻿const sessionDuration = 2 * 60 * 1000; // 30 minutes
-const warningTime = 1 * 60 * 1000;     // Show popup at 25 mins (5 mins left)
+﻿const sessionDuration = 30 * 60 * 1000; // 30 minutes
+const warningTime = 25 * 60 * 1000;     // Show popup at 25 mins (5 mins left)
 
 // Timer to trigger Bootstrap modal popup
 setTimeout(() => {

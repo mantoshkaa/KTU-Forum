@@ -45,7 +45,7 @@ namespace KTU_forum
             services.AddHttpContextAccessor();
             services.AddSession(options =>
             {
-                options.IdleTimeout = TimeSpan.FromMinutes(2);  // Session timeout after 30 minutes
+                options.IdleTimeout = TimeSpan.FromMinutes(30);  // Session timeout after 30 minutes
                 options.Cookie.HttpOnly = true;  // Helps prevent XSS attacks
                 options.Cookie.IsEssential = true;  // Required for non-logged-in users
             });

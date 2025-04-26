@@ -62,7 +62,7 @@ namespace KTU_forum.Pages
                 // Create a cookie to store authentication information
                 var cookieOptions = new CookieOptions
                 {
-                    Expires = DateTime.Now.AddMinutes(2),
+                    Expires = DateTime.Now.AddMinutes(30),
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict
