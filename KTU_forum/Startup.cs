@@ -97,15 +97,6 @@ namespace KTU_forum
             });
 
             app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapRazorPages();
-                endpoints.MapHub<Hubs.ChatHub>("/chatHub");
-            });
-
-
-
         }
     }
 }
