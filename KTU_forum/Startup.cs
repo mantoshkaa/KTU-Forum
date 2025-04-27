@@ -62,41 +62,26 @@ namespace KTU_forum
             else
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
-
             app.UseHttpsRedirection();
-            app.UseStaticFiles(new StaticFileOptions
-            {
-            });
-            app.UseStaticFiles(); // FIXES CSS BUG
+            app.UseStaticFiles(); // Single static files configuration
 
             app.UseRouting();
-
-            //enable session management
             app.UseSession();
+            app.UseAuthorization(); // Should be after UseRouting but before UseEndpoints
 
-            // Define KeepAlive endpoint
             app.UseEndpoints(endpoints =>
             {
-                // Existing routes
                 endpoints.MapRazorPages();
                 endpoints.MapHub<Hubs.ChatHub>("/chatHub");
-
-                // Add the /KeepAlive endpoint to reset session expiration
                 endpoints.MapGet("/KeepAlive", async context =>
                 {
-                    // Simply touch the session to reset its expiration
                     context.Session.SetString("KeepAlive", "true");
-
-                    // Optionally, you can send a response (not necessary for keep-alive)
                     await Task.CompletedTask;
                 });
             });
-
-            app.UseAuthorization();
         }
     }
 }

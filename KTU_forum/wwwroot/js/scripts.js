@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function checkUsernameAvailability() {
         const usernameInput = document.getElementById("Username");
+        if (!usernameInput) return;
         const usernameError = document.createElement("div");
         usernameError.style.color = "red";
         usernameInput.parentNode.appendChild(usernameError);

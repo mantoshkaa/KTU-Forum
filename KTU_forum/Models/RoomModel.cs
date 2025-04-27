@@ -16,6 +16,6 @@ namespace KTU_forum.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         // Navigation
-        public List<MessageModel> Messages { get; set; } = new(); // one room can have many messages, one message can be allocated to one room
+        public ICollection<MessageModel> Messages { get; set; }
     }
 }

@@ -8,23 +8,26 @@ namespace KTU_forum.Models
         public int Id { get; set; }
 
         public int UserId { get; set; }
-        public UserModel User { get; set; } // which user sent it
+        public UserModel User { get; set; } // Which user sent it
 
         public int RoomId { get; set; }
-        public RoomModel Room { get; set; } // in which room is it
+        public RoomModel Room { get; set; } // In which room was it sent
 
-        public string Content { get; set; } // content as a text message
+        [MaxLength(500)] // Optional: restrict message content length (adjust as needed)
+        public string Content { get; set; } // Text message content
 
-        public string ImagePath { get; set; } // content as an image
+        [MaxLength(255)] // Optional: limit length of image path
+        public string ImagePath { get; set; } // Path for an image attached to the message
 
-        public DateTime SentAt { get; set; } = DateTime.UtcNow; // when was it sent
+        public DateTime SentAt { get; set; } = DateTime.UtcNow; // When was it sent
 
         public int Likes { get; set; } = 0;
 
+        // Custom validation to ensure either content or image is provided
         [CustomValidation(typeof(MessageModel), nameof(ValidateContentOrImage))]
         public object ValidationCheck => null;
 
-        // method for making either text message or an image required to send something, since we can't put required tag on both
+        // Validation method to ensure either content or image is provided
         public static ValidationResult ValidateContentOrImage(object _, ValidationContext context)
         {
             var message = (MessageModel)context.ObjectInstance;

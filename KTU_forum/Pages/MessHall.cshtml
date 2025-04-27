@@ -1,20 +1,31 @@
 ﻿@page
 @model KTU_forum.Pages.MessHallModel
 @{
+
+    var roomName = Model.RoomName;
     var username = Model.Username;
     var profilePic = Model.ProfilePicturePath;
 }
-
 <div class="container-fluid vh-100 d-flex flex-column">
     <div class="card shadow border-0 rounded-4 mb-0 flex-fill">
         <div class="card-body p-4 d-flex flex-column">
             <!-- Chat Messages Area -->
             <div class="messages-container flex-fill overflow-auto" style="max-height: calc(100vh - 150px);">
                 <ul id="messagesList" class="list-unstyled">
-                    <!-- Messages will appear here -->
+                    @foreach (var message in Model.Messages)
+                    {
+                        var formattedTime = message.SentAt.ToString("yyyy-MM-dd | HH:mm");
+                        <li class="d-flex align-items-start mb-3">
+                            <img src="@message.SenderProfilePic" alt="@message.SenderUsername's profile picture" class="rounded-circle"
+                                 style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
+                            <div>
+                                <small class="text-muted">@message.SenderUsername • @formattedTime</small>
+                                <p class="mb-1">@message.Content</p>
+                            </div>
+                        </li>
+                    }
                 </ul>
             </div>
-
             <!-- Message Input Area -->
             <div class="message-input-area mt-3">
                 <div class="d-flex">
@@ -25,32 +36,27 @@
         </div>
     </div>
 </div>
-
 <!-- SignalR JS Script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.10/signalr.min.js"></script>
 <script>
     var username = '@username';
     var profilePicPath = '@profilePic';
-    const currentDate = new Date();
-
-    const year = currentDate.getFullYear();
-    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
-    const day = currentDate.getDate().toString().padStart(2, '0');
-    const hours = currentDate.getHours().toString().padStart(2, '0');
-    const minutes = currentDate.getMinutes().toString().padStart(2, '0');
-
-    const formattedDate = `${year}-${month}-${day} | ${hours}:${minutes}`;
+    var roomName = '@roomName';
 
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/chatHub")
         .build();
 
-    connection.start().catch(err => console.error(err));
+    connection.start()
+    .then(function () {
+        connection.invoke("JoinRoom", roomName);
+    })
+    .catch(function (err) {
+        return console.error(err.toString());
+    });
 
-    // ⚠️ Modified this to accept profilePicPath from the server
     connection.on("ReceiveMessage", function (user, message, profilePic) {
         const messagesList = document.getElementById("messagesList");
-
         const messageItem = document.createElement("li");
         messageItem.classList.add("d-flex", "align-items-start", "mb-3");
 
@@ -64,9 +70,17 @@
         img.style.marginRight = "10px";
 
         const messageContent = document.createElement("div");
-
         const meta = document.createElement("small");
         meta.classList.add("text-muted");
+
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = currentDate.getDate().toString().padStart(2, '0');
+        const hours = currentDate.getHours().toString().padStart(2, '0');
+        const minutes = currentDate.getMinutes().toString().padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day} | ${hours}:${minutes}`;
+
         meta.textContent = `${user} • ${formattedDate}`;
 
         const messageText = document.createElement("p");
@@ -75,30 +89,43 @@
 
         messageContent.appendChild(meta);
         messageContent.appendChild(messageText);
-
         messageItem.appendChild(img);
         messageItem.appendChild(messageContent);
-
         messagesList.appendChild(messageItem);
+
         messagesList.scrollTop = messagesList.scrollHeight;
     });
 
     document.getElementById("sendButton").addEventListener("click", function () {
-        const message = document.getElementById("messageInput").value;
+        sendMessage();
+    });
 
+    document.getElementById("messageInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    });
+
+    function sendMessage() {
+        const message = document.getElementById("messageInput").value;
         if (!username) {
             alert("Please log in.");
             return;
         }
-
         if (!message.trim()) {
             alert("Please input a message.");
             return;
         }
 
-        connection.invoke("SendMessage", username, message)
+        connection.invoke("SendMessage", username, roomName, message)
             .catch(err => console.error(err.toString()));
 
         document.getElementById("messageInput").value = "";
-    });
+    }
+
+    // Scroll to bottom when page loads
+    window.onload = function() {
+        const messagesList = document.getElementById("messagesList");
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
 </script>

@@ -3,6 +3,7 @@ using System;
 using KTU_forum.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KTU_forum.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250427082026_updatedMessageModel")]
+    partial class updatedMessageModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -233,7 +236,8 @@ namespace KTU_forum.Migrations
                 {
                     b.HasOne("KTU_forum.Models.ReplyModel", "ParentReply")
                         .WithMany("ChildrenReplies")
-                        .HasForeignKey("ParentReplyId");
+                        .HasForeignKey("ParentReplyId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("KTU_forum.Models.PostModel", "Post")
                         .WithMany("Replies")

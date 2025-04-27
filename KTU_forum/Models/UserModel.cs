@@ -34,7 +34,7 @@ namespace KTU_forum.Models
         //define relationships
         public List<PostModel> Posts { get; set; } = new(); // One user -> many posts
         public List<ReplyModel> Replies { get; set; } = new(); // One user -> many replies
-        public List<MessageModel> Messages { get; set; } = new(); // One user -> many messages
+        public ICollection<MessageModel> Messages { get; set; }
 
 
     }
