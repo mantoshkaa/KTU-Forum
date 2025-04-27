@@ -12,6 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\Class.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="wwwroot\js\session-manager.js" />
   </ItemGroup>
 

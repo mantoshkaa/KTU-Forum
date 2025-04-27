@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace KTU_forum.Models
@@ -21,7 +22,8 @@ namespace KTU_forum.Models
 
         public DateTime SentAt { get; set; } = DateTime.UtcNow; // When was it sent
 
-        public int Likes { get; set; } = 0;
+        public ICollection<LikeModel> Likes { get; set; }
+        public int LikesCount => Likes?.Count ?? 0;  // Using the count of the Likes collection
 
         // Custom validation to ensure either content or image is provided
         [CustomValidation(typeof(MessageModel), nameof(ValidateContentOrImage))]

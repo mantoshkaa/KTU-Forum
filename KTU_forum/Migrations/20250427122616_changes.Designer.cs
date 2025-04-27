@@ -3,6 +3,7 @@ using System;
 using KTU_forum.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KTU_forum.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250427122616_changes")]
+    partial class changes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace KTU_forum.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("KTU_forum.Models.LikeModel", b =>
-                {
-                    b.Property<int>("MessageId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("MessageId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Likes");
-                });
 
             modelBuilder.Entity("KTU_forum.Models.MessageModel", b =>
                 {
@@ -52,6 +40,9 @@ namespace KTU_forum.Migrations
                     b.Property<string>("ImagePath")
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<int>("Likes")
+                        .HasColumnType("integer");
 
                     b.Property<int>("RoomId")
                         .HasColumnType("integer");
@@ -211,25 +202,6 @@ namespace KTU_forum.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("KTU_forum.Models.LikeModel", b =>
-                {
-                    b.HasOne("KTU_forum.Models.MessageModel", "Message")
-                        .WithMany("Likes")
-                        .HasForeignKey("MessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("KTU_forum.Models.UserModel", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Message");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("KTU_forum.Models.MessageModel", b =>
                 {
                     b.HasOne("KTU_forum.Models.RoomModel", "Room")
@@ -284,11 +256,6 @@ namespace KTU_forum.Migrations
                     b.Navigation("Post");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("KTU_forum.Models.MessageModel", b =>
-                {
-                    b.Navigation("Likes");
                 });
 
             modelBuilder.Entity("KTU_forum.Models.PostModel", b =>

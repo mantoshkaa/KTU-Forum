@@ -54,7 +54,6 @@ namespace KTU_forum.Pages
                 ProfilePicturePath = "/pfps/default.png";
             }
 
-            // Check if "Mess Hall" room exists and create it if it doesn't
             var messHallRoom = _context.Rooms.FirstOrDefault(r => r.Name == RoomName);
 
             // If the room doesn't exist, create and save it
@@ -72,7 +71,7 @@ namespace KTU_forum.Pages
 
             // Load messages with user information using a join
             Messages = _context.Messages
-                .Include(m => m.User)  // Make sure your DbContext has proper relationship configured
+                .Include(m => m.User)
                 .OrderByDescending(m => m.SentAt)
                 .Take(50)
                 .OrderBy(m => m.SentAt)

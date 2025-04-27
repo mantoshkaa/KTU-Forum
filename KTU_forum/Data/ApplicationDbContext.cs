@@ -13,6 +13,7 @@ namespace KTU_forum.Data
         public DbSet<ReplyModel> Replies { get; set; }
         public DbSet<MessageModel> Messages { get; set; }
         public DbSet<RoomModel> Rooms { get; set; }
+        public DbSet<LikeModel> Likes { get; set; }
 
         // just for clarity control, since there are multiple relationships related to replies and messages
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -42,6 +43,23 @@ namespace KTU_forum.Data
             modelBuilder.Entity<UserModel>()
                 .HasIndex(u => u.Username)
                 .IsUnique();
+
+            // Define the composite key for the LikeModel
+            modelBuilder.Entity<LikeModel>()
+                .HasKey(l => new { l.MessageId, l.UserId });  // Composite key: MessageId + UserId
+
+            // Set up the relationship between Likes and Messages
+            modelBuilder.Entity<LikeModel>()
+                .HasOne(l => l.Message)
+                .WithMany(m => m.Likes)  // A message can have many likes
+                .HasForeignKey(l => l.MessageId);
+
+            // Set up the relationship between Likes and Users
+            modelBuilder.Entity<LikeModel>()
+                .HasOne(l => l.User)
+                .WithMany()  // No need for a navigation property on UserModel
+                .HasForeignKey(l => l.UserId);
+
         }
 
     }
