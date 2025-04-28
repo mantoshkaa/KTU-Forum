@@ -13,7 +13,7 @@ namespace KTU_forum.Pages
 {
     public class ProfileModel : PageModel
     {
-        private readonly ApplicationDbContext _context; // Use ApplicationDbContext
+        private readonly ApplicationDbContext _context;
         private readonly ILogger<ProfileModel> _logger;
 
         public ProfileModel(ApplicationDbContext context, ILogger<ProfileModel> logger)
@@ -32,6 +32,10 @@ namespace KTU_forum.Pages
         // Password change property
         [BindProperty]
         public string NewPassword { get; set; }
+
+        // Bio update property
+        [BindProperty]
+        public string NewBio { get; set; }
 
         public void OnGet()
         {
@@ -77,19 +81,22 @@ namespace KTU_forum.Pages
 
             if (ModelState.IsValid)
             {
-
                 // Update password if provided
                 if (!string.IsNullOrEmpty(NewPassword))
                 {
                     CurrentUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(NewPassword);
-                    _context.Users.Update(CurrentUser);
-                    await _context.SaveChangesAsync();
+                }
+
+                // Update bio if provided
+                if (NewBio != null)
+                {
+                    CurrentUser.Bio = NewBio;
                 }
 
                 // Update profile picture if provided
                 if (NewProfilePicture != null)
                 {
-                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "profile-pictures", NewProfilePicture.FileName); // Adjust path to "wwwroot/images"
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "profile-pictures", NewProfilePicture.FileName);
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await NewProfilePicture.CopyToAsync(stream);
@@ -111,7 +118,6 @@ namespace KTU_forum.Pages
 
             return Page(); // Return the page if there were errors
         }
-
 
         public async Task<IActionResult> OnPostDeleteAsync()
         {

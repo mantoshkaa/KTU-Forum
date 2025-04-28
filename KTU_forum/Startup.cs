@@ -40,6 +40,11 @@ namespace KTU_forum
             services.AddSignalR(); // Add SignalR services
             services.AddControllersWithViews(); // Or add your services like MVC
 
+            services.AddRazorPages(options =>
+            {
+                // This ensures Razor Pages with route parameters work correctly
+                options.Conventions.AddPageRoute("/PublicProfile", "/Profile/{username}");
+            });
 
             services.AddRazorPages();
             services.AddHttpContextAccessor();

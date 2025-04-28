@@ -77,6 +77,12 @@
                                         <input type="email" class="form-control" id="Email" value="@user.Email" readonly />
                                     </div>
 
+                                    <!-- Bio Section -->
+                                    <div class="mb-3">
+                                        <label for="Bio" class="form-label">Bio</label>
+                                        <textarea class="form-control" id="Bio" name="NewBio" rows="3" placeholder="Tell us about yourself">@user.Bio</textarea>
+                                    </div>
+
                                     <!-- Change Password Section -->
                                     <div class="mb-3">
                                         <label for="Password" class="form-label">Change Password</label>
@@ -85,9 +91,7 @@
 
                                     <!-- Save Changes Button -->
                                     <div class="d-flex justify-content-between mt-3">
-                                        <form method="post" asp-page-handler="Update">
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                                        </form>
+                                        <button type="submit" class="btn btn-primary">Save Changes</button>
 
                                         <form method="post" asp-page-handler="Delete" onsubmit="return confirmDelete()">
                                             <button type="submit" class="btn btn-danger">Delete Account</button>

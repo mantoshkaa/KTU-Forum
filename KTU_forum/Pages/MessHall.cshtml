@@ -16,16 +16,22 @@
                     {
                         var formattedTime = message.SentAt.ToString("yyyy-MM-dd | HH:mm");
                         <li class="d-flex align-items-start mb-3 message-item position-relative">
-                            <img src="@message.SenderProfilePic" alt="@message.SenderUsername's profile picture" class="rounded-circle"
+                            <img src="@message.SenderProfilePic" alt="@message.SenderUsername's profile picture" class="rounded-circle profile-pic"
                                  style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
                             <div>
                                 <small class="text-muted">@message.SenderUsername • @formattedTime</small>
                                 <p class="mb-1">@message.Content</p>
                             </div>
 
-                            <div class="message-menu position-absolute top-0 end-0 me-2 mt-2 d-none">
-                                <button class="btn btn-sm btn-outline-primary me-1 like-btn">👍 Like</button>
-                                <button class="btn btn-sm btn-outline-secondary reply-btn">↩️ Reply</button>
+                            <div class="message-actions position-absolute top-0 end-0 me-2 mt-2">
+                                <button class="btn btn-sm btn-light message-options-btn">...</button>
+                                <div class="message-menu d-none bg-light border rounded shadow-sm p-2">
+                                    <button class="btn btn-sm btn-outline-primary me-1 like-btn" data-message-id="@message.MessageId">👍 Like</button>
+                                    <button class="btn btn-sm btn-outline-primary reply-btn">↩️ Reply</button>
+                                    <a href="/PublicProfile/@message.SenderUsername" class="btn btn-sm btn-outline-primary view-profile-btn">
+                                        👤 View Profile
+                                    </a>
+                                </div>
                             </div>
                         </li>
                     }
@@ -41,10 +47,13 @@
         </div>
     </div>
 </div>
+
+
+
 <!-- SignalR JS Script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.10/signalr.min.js"></script>
 <script>
-    var username = '@username';
+        var username = '@username';
     var profilePicPath = '@profilePic';
     var roomName = '@roomName';
 
@@ -53,33 +62,22 @@
         .build();
 
     connection.start()
-    .then(function () {
-        connection.invoke("JoinRoom", roomName);
-    })
-    .catch(function (err) {
-        return console.error(err.toString());
-    });
+        .then(function () {
+            connection.invoke("JoinRoom", roomName);
+        })
+        .catch(function (err) {
+            return console.error(err.toString());
+        });
 
     connection.on("ReceiveMessage", function (user, message, profilePic) {
         const messagesList = document.getElementById("messagesList");
         const messageItem = document.createElement("li");
-        messageItem.classList.add("d-flex", "align-items-start", "mb-3");
-
-        const messageMenu = document.createElement("div");
-        messageMenu.classList.add("message-menu", "position-absolute", "top-0", "end-0", "me-2", "mt-2", "d-none");
-
-        const likeButton = document.createElement("button");
-        likeButton.classList.add("btn", "btn-sm", "btn-outline-primary", "me-1", "like-btn");
-        likeButton.textContent = "👍 Like";
-
-        const replyButton = document.createElement("button");
-        replyButton.classList.add("btn", "btn-sm", "btn-outline-secondary", "reply-btn");
-        replyButton.textContent = "↩️ Reply";
+        messageItem.classList.add("d-flex", "align-items-start", "mb-3", "message-item", "position-relative");
 
         const img = document.createElement("img");
         img.src = profilePic || '/pfps/default.png'; // fallback
         img.alt = user + "'s profile picture";
-        img.classList.add("rounded-circle");
+        img.classList.add("rounded-circle", "profile-pic");
         img.style.width = "40px";
         img.style.height = "40px";
         img.style.objectFit = "cover";
@@ -103,57 +101,75 @@
         messageText.classList.add("mb-1");
         messageText.textContent = message;
 
+        const messageActions = document.createElement("div");
+        messageActions.classList.add("message-actions", "position-absolute", "top-0", "end-0", "me-2", "mt-2");
+
+        const optionsButton = document.createElement("button");
+        optionsButton.classList.add("btn", "btn-sm", "btn-light", "message-options-btn");
+        optionsButton.textContent = "...";
+
+        const messageMenu = document.createElement("div");
+        messageMenu.classList.add("message-menu", "d-none", "bg-light", "border", "rounded", "shadow-sm", "p-2");
+
+        const likeButton = document.createElement("button");
+        likeButton.classList.add("btn", "btn-sm", "btn-outline-primary", "me-1", "like-btn");
+        likeButton.textContent = "👍 Like";
+        likeButton.dataset.messageId = "TEMP_ID"; // You'll need to handle setting the actual message ID on creation
+
+        const replyButton = document.createElement("button");
+        replyButton.classList.add("btn", "btn-sm", "btn-outline-secondary", "reply-btn");
+        replyButton.textContent = "↩️ Reply";
+
+        const viewProfileLink = document.createElement("a");
+        viewProfileLink.href = `/Profile/${user}`;
+        viewProfileLink.classList.add("btn", "btn-sm", "btn-outline-info", "view-profile-btn");
+        viewProfileLink.textContent = "👤 View Profile";
+
         messageMenu.appendChild(likeButton);
         messageMenu.appendChild(replyButton);
+        messageMenu.appendChild(viewProfileLink);
+        messageActions.appendChild(optionsButton);
+        messageActions.appendChild(messageMenu);
 
         messageContent.appendChild(meta);
         messageContent.appendChild(messageText);
         messageItem.appendChild(img);
         messageItem.appendChild(messageContent);
+        messageItem.appendChild(messageActions);
         messagesList.appendChild(messageItem);
 
         messagesList.scrollTop = messagesList.scrollHeight;
 
-        messageItem.classList.add("position-relative", "message-item");
-        messageItem.appendChild(messageMenu);
-
-        // Add the click event to the like button
+        // Add the click event to the like button (moved inside the message creation)
         likeButton.addEventListener("click", function () {
-            const messageId = likeButton.dataset.messageId; // Get the message ID from the button's data attribute
+            const messageId = this.dataset.messageId; // Get the message ID from the button
             connection.invoke("LikeMessage", messageId, username)
                 .catch(err => console.error(err.toString()));
         });
+    });
+
+    document.addEventListener("click", function (event) {
+        if (event.target.classList.contains("message-options-btn")) {
+            const messageActions = event.target.closest(".message-actions");
+            const menu = messageActions.querySelector(".message-menu");
+            menu.classList.toggle("d-none");
+        } else if (!event.target.closest(".message-actions")) {
+            // Close any open menus if clicking outside the actions area
+            document.querySelectorAll(".message-menu:not(.d-none)").forEach(menu => {
+                menu.classList.add("d-none");
+            });
+        }
     });
 
     document.getElementById("sendButton").addEventListener("click", function () {
         sendMessage();
     });
 
-    document.getElementById("messageInput").addEventListener("keypress", function(event) {
+    document.getElementById("messageInput").addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
             sendMessage();
         }
     });
-
-        // Handle hover to show/hide the message menu
-    document.addEventListener("mouseover", function (event) {
-        if (event.target.closest(".message-item")) {
-            const menu = event.target.closest(".message-item").querySelector(".message-menu");
-            if (menu) {
-                menu.classList.remove("d-none");
-            }
-        }
-    });
-
-    document.addEventListener("mouseout", function (event) {
-        if (event.target.closest(".message-item")) {
-            const menu = event.target.closest(".message-item").querySelector(".message-menu");
-            if (menu) {
-                menu.classList.add("d-none");
-            }
-        }
-    });
-
 
     function sendMessage() {
         const message = document.getElementById("messageInput").value;
@@ -173,8 +189,56 @@
     }
 
     // Scroll to bottom when page loads
-    window.onload = function() {
+    window.onload = function () {
         const messagesList = document.getElementById("messagesList");
         messagesList.scrollTop = messagesList.scrollHeight;
     }
 </script>
+
+<style>
+    /* Your CSS rules here */
+    .message-actions {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin-top: 0.5rem;
+        margin-right: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .message-options-btn {
+        padding: 0.1rem 0.5rem;
+        line-height: 1;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+
+        .message-options-btn:hover {
+            background-color: #e9ecef;
+        }
+
+    .message-menu {
+        position: absolute;
+        top: 100%; /* Position below the button */
+        right: 0;
+        z-index: 10;
+        min-width: 100px; /* Adjust as needed */
+    }
+
+        .message-menu button,
+        .message-menu a {
+            display: block;
+            width: 100%;
+            padding: 0.25rem 0.5rem;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+            .message-menu button:hover,
+            .message-menu a:hover {
+                background-color: #e9ecef;
+            }
+</style>
