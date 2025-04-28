@@ -5,6 +5,7 @@ using KTU_forum.Data;      // <-- your ApplicationDbContext namespace
 using Microsoft.EntityFrameworkCore;
 using KTU_forum.Models;
 using System;
+using Microsoft.AspNetCore.Identity;
 
 namespace KTU_forum.Hubs
 {
@@ -17,7 +18,7 @@ namespace KTU_forum.Hubs
             _dbContext = dbContext;
         }
 
-        public async Task SendMessage(string username, string roomName, string message)
+        public async Task SendMessage(string username, string roomName, string message, string role = null)
         {
             try
             {
@@ -39,20 +40,26 @@ namespace KTU_forum.Hubs
                     return;
                 }
 
+                if (string.IsNullOrEmpty(role) && user != null)
+                {
+                    role = user.Role;
+                }
+
                 // Create and save message to database with userId and roomId
                 var newMessage = new MessageModel
                 {
                     UserId = user.Id,
                     RoomId = room.Id,  // Assign the RoomId
                     Content = message,
-                    SentAt = DateTime.UtcNow
+                    SentAt = DateTime.UtcNow,
+                    SenderRole = role
                 };
 
                 _dbContext.Messages.Add(newMessage);
                 await _dbContext.SaveChangesAsync();
 
                 // Broadcast the message to all clients in that room
-                await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message, user.ProfilePicturePath ?? "/pfps/default.png");
+                await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message, user.ProfilePicturePath ?? "/pfps/default.png", role);
             }
             catch (Exception ex)
             {

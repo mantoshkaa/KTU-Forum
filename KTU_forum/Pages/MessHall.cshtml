@@ -1,10 +1,10 @@
 ﻿@page
 @model KTU_forum.Pages.MessHallModel
 @{
-
     var roomName = Model.RoomName;
     var username = Model.Username;
     var profilePic = Model.ProfilePicturePath;
+    var userRole = Model.UserRole; // Added user role
 }
 <div class="container-fluid vh-100 d-flex flex-column">
     <div class="card shadow border-0 rounded-4 mb-0 flex-fill">
@@ -19,7 +19,14 @@
                             <img src="@message.SenderProfilePic" alt="@message.SenderUsername's profile picture" class="rounded-circle profile-pic"
                                  style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
                             <div>
-                                <small class="text-muted">@message.SenderUsername • @formattedTime</small>
+                                <small class="text-muted">
+                                    @message.SenderUsername
+                                    @if (!string.IsNullOrEmpty(message.SenderRole))
+                                    {
+                                        <span class="badge bg-success text-white ms-1" style="opacity: 0.4; font-size: 0.75rem;">@message.SenderRole</span>
+                                    }
+                                    • @formattedTime
+                                </small>
                                 <p class="mb-1">@message.Content</p>
                             </div>
 
@@ -48,14 +55,13 @@
     </div>
 </div>
 
-
-
 <!-- SignalR JS Script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.10/signalr.min.js"></script>
 <script>
-        var username = '@username';
+    var username = '@username';
     var profilePicPath = '@profilePic';
     var roomName = '@roomName';
+    var userRole = '@userRole'; // Added user role JavaScript variable
 
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/chatHub")
@@ -69,7 +75,7 @@
             return console.error(err.toString());
         });
 
-    connection.on("ReceiveMessage", function (user, message, profilePic) {
+    connection.on("ReceiveMessage", function (user, message, profilePic, role) {
         const messagesList = document.getElementById("messagesList");
         const messageItem = document.createElement("li");
         messageItem.classList.add("d-flex", "align-items-start", "mb-3", "message-item", "position-relative");
@@ -95,7 +101,21 @@
         const minutes = currentDate.getMinutes().toString().padStart(2, '0');
         const formattedDate = `${year}-${month}-${day} | ${hours}:${minutes}`;
 
-        meta.textContent = `${user} • ${formattedDate}`;
+        // Create the username and role part
+        meta.innerHTML = `${user}`;
+
+        // Add role badge if role exists
+        if (role) {
+            const roleBadge = document.createElement("span");
+            roleBadge.classList.add("badge", "bg-success", "text-white", "ms-1");
+            roleBadge.style.opacity = "0.4";
+            roleBadge.style.fontSize = "0.75rem";
+            roleBadge.textContent = role;
+            meta.appendChild(roleBadge);
+        }
+
+        // Add the timestamp
+        meta.innerHTML += ` • ${formattedDate}`;
 
         const messageText = document.createElement("p");
         messageText.classList.add("mb-1");
@@ -121,7 +141,7 @@
         replyButton.textContent = "↩️ Reply";
 
         const viewProfileLink = document.createElement("a");
-        viewProfileLink.href = `/Profile/${user}`;
+        viewProfileLink.href = `/PublicProfile/${user}`;
         viewProfileLink.classList.add("btn", "btn-sm", "btn-outline-info", "view-profile-btn");
         viewProfileLink.textContent = "👤 View Profile";
 
@@ -182,7 +202,7 @@
             return;
         }
 
-        connection.invoke("SendMessage", username, roomName, message)
+        connection.invoke("SendMessage", username, roomName, message, userRole) // Added userRole parameter
             .catch(err => console.error(err.toString()));
 
         document.getElementById("messageInput").value = "";

@@ -21,6 +21,7 @@ namespace KTU_forum.Models
         public string ImagePath { get; set; } // Path for an image attached to the message
 
         public DateTime SentAt { get; set; } = DateTime.UtcNow; // When was it sent
+        public string SenderRole { get; set; }
 
         public ICollection<LikeModel> Likes { get; set; }
         public int LikesCount => Likes?.Count ?? 0;  // Using the count of the Likes collection

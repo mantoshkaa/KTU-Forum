@@ -6,7 +6,6 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 using Microsoft.EntityFrameworkCore;
-
 namespace KTU_forum.Pages
 {
     public class MessHallModel : PageModel
@@ -15,7 +14,7 @@ namespace KTU_forum.Pages
         public string RoomName { get; set; }
         public string Username { get; set; }
         public string ProfilePicturePath { get; set; }
-
+        public string UserRole { get; set; }
         // Updated to include both message and user info
         public class MessageViewModel
         {
@@ -24,25 +23,24 @@ namespace KTU_forum.Pages
             public DateTime SentAt { get; set; }
             public string SenderUsername { get; set; }
             public string SenderProfilePic { get; set; }
+            public string SenderRole { get; set; }
         }
-
         public List<MessageViewModel> Messages { get; set; }
-
         public MessHallModel(ApplicationDbContext context)
         {
             _context = context;
         }
-
         public void OnGet()
         {
             RoomName = HttpContext.Request.Query["roomName"];
             Username = HttpContext.Session.GetString("Username");
             if (!string.IsNullOrEmpty(Username))
             {
-                var user = _context.Users.FirstOrDefault(u => u.Username == Username);
-                if (user != null)
+                var userr = _context.Users.FirstOrDefault(u => u.Username == Username);
+                if (userr != null)
                 {
-                    ProfilePicturePath = user.ProfilePicturePath ?? "/pfps/default.png";
+                    ProfilePicturePath = userr.ProfilePicturePath ?? "/pfps/default.png";
+                    UserRole = userr.Role; // Make sure to set the user role
                 }
                 else
                 {
@@ -53,9 +51,7 @@ namespace KTU_forum.Pages
             {
                 ProfilePicturePath = "/pfps/default.png";
             }
-
             var messHallRoom = _context.Rooms.FirstOrDefault(r => r.Name == RoomName);
-
             // If the room doesn't exist, create and save it
             if (messHallRoom == null)
             {
@@ -64,13 +60,13 @@ namespace KTU_forum.Pages
                     Name = RoomName,
                     CreatedAt = DateTime.UtcNow // Use UTC time to avoid timezone issues
                 };
-
                 _context.Rooms.Add(newRoom);
                 _context.SaveChanges();
             }
 
             // Load messages with user information using a join
             Messages = _context.Messages
+                .Where(m => m.Room.Name == RoomName) // Only messages for this room
                 .Include(m => m.User)
                 .OrderByDescending(m => m.SentAt)
                 .Take(50)
@@ -81,7 +77,8 @@ namespace KTU_forum.Pages
                     Content = m.Content,
                     SentAt = m.SentAt,
                     SenderUsername = m.User.Username,
-                    SenderProfilePic = m.User.ProfilePicturePath ?? "/pfps/default.png"
+                    SenderProfilePic = m.User.ProfilePicturePath ?? "/pfps/default.png",
+                    SenderRole = m.User.Role // Add the sender's role here
                 })
                 .ToList();
         }
