@@ -24,6 +24,7 @@ namespace KTU_forum.Pages
             public string SenderUsername { get; set; }
             public string SenderProfilePic { get; set; }
             public string SenderRole { get; set; }
+            public int LikesCount { get; set; }
         }
         public List<MessageViewModel> Messages { get; set; }
         public MessHallModel(ApplicationDbContext context)
@@ -68,6 +69,7 @@ namespace KTU_forum.Pages
             Messages = _context.Messages
                 .Where(m => m.Room.Name == RoomName) // Only messages for this room
                 .Include(m => m.User)
+                .Include(m => m.Likes) // Include likes collection
                 .OrderByDescending(m => m.SentAt)
                 .Take(50)
                 .OrderBy(m => m.SentAt)
@@ -78,7 +80,8 @@ namespace KTU_forum.Pages
                     SentAt = m.SentAt,
                     SenderUsername = m.User.Username,
                     SenderProfilePic = m.User.ProfilePicturePath ?? "/pfps/default.png",
-                    SenderRole = m.User.Role // Add the sender's role here
+                    SenderRole = m.User.Role,
+                    LikesCount = m.Likes.Count // Get the count of likes from the included collection
                 })
                 .ToList();
         }

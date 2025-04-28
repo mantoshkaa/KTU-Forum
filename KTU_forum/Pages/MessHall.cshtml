@@ -4,7 +4,7 @@
     var roomName = Model.RoomName;
     var username = Model.Username;
     var profilePic = Model.ProfilePicturePath;
-    var userRole = Model.UserRole; // Added user role
+    var userRole = Model.UserRole;
 }
 <div class="container-fluid vh-100 d-flex flex-column">
     <div class="card shadow border-0 rounded-4 mb-0 flex-fill">
@@ -28,6 +28,15 @@
                                     • @formattedTime
                                 </small>
                                 <p class="mb-1">@message.Content</p>
+                                <!-- Like counter display -->
+                                <div class="d-flex align-items-center">
+                                    <span class="likes-count badge bg-light text-dark me-2" id="likes-@message.MessageId">
+                                        @if (message.LikesCount > 0)
+                                        {
+                                            <i class="bi bi-hand-thumbs-up-fill"></i> @message.LikesCount
+                                        }
+                                    </span>
+                                </div>
                             </div>
 
                             <div class="message-actions position-absolute top-0 end-0 me-2 mt-2">
@@ -61,7 +70,7 @@
     var username = '@username';
     var profilePicPath = '@profilePic';
     var roomName = '@roomName';
-    var userRole = '@userRole'; // Added user role JavaScript variable
+    var userRole = '@userRole';
 
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/chatHub")
@@ -70,10 +79,30 @@
     connection.start()
         .then(function () {
             connection.invoke("JoinRoom", roomName);
+            console.log("Connected to SignalR hub!");
         })
         .catch(function (err) {
-            return console.error(err.toString());
+            console.error("SignalR Connection Error:", err.toString());
         });
+
+    // Handle like updates from server
+    connection.on("UpdateLikes", function (messageId, likeCount) {
+        console.log("Received UpdateLikes:", messageId, likeCount);
+        const likesCountElement = document.getElementById("likes-" + messageId);
+        if (likesCountElement) {
+            if (likeCount > 0) {
+                likesCountElement.innerHTML = `<i class="bi bi-hand-thumbs-up-fill"></i> ${likeCount}`;
+            } else {
+                likesCountElement.innerHTML = '';
+            }
+        }
+    });
+
+    // Handle error messages from server
+    connection.on("ErrorMessage", function (errorMessage) {
+        console.error("Server error:", errorMessage);
+        alert(errorMessage);
+    });
 
     connection.on("ReceiveMessage", function (user, message, profilePic, role) {
         const messagesList = document.getElementById("messagesList");
@@ -121,6 +150,16 @@
         messageText.classList.add("mb-1");
         messageText.textContent = message;
 
+        // Add likes count element
+        const likesContainer = document.createElement("div");
+        likesContainer.classList.add("d-flex", "align-items-center");
+
+        const likesCount = document.createElement("span");
+        likesCount.classList.add("likes-count", "badge", "bg-light", "text-dark", "me-2");
+        likesCount.id = "likes-TEMP_ID"; // Will be updated when we get the real message ID
+
+        likesContainer.appendChild(likesCount);
+
         const messageActions = document.createElement("div");
         messageActions.classList.add("message-actions", "position-absolute", "top-0", "end-0", "me-2", "mt-2");
 
@@ -153,6 +192,7 @@
 
         messageContent.appendChild(meta);
         messageContent.appendChild(messageText);
+        messageContent.appendChild(likesContainer);
         messageItem.appendChild(img);
         messageItem.appendChild(messageContent);
         messageItem.appendChild(messageActions);
@@ -163,8 +203,8 @@
         // Add the click event to the like button (moved inside the message creation)
         likeButton.addEventListener("click", function () {
             const messageId = this.dataset.messageId; // Get the message ID from the button
-            connection.invoke("LikeMessage", messageId, username)
-                .catch(err => console.error(err.toString()));
+            connection.invoke("LikeMessage", parseInt(messageId), username)
+                .catch(err => console.error("Error liking message:", err.toString()));
         });
     });
 
@@ -178,6 +218,13 @@
             document.querySelectorAll(".message-menu:not(.d-none)").forEach(menu => {
                 menu.classList.add("d-none");
             });
+        }
+
+        // Handle clicks on like buttons in the existing messages
+        if (event.target.classList.contains("like-btn")) {
+            const messageId = event.target.dataset.messageId;
+            connection.invoke("LikeMessage", parseInt(messageId), username)
+                .catch(err => console.error("Error liking message:", err.toString()));
         }
     });
 
@@ -202,8 +249,8 @@
             return;
         }
 
-        connection.invoke("SendMessage", username, roomName, message, userRole) // Added userRole parameter
-            .catch(err => console.error(err.toString()));
+        connection.invoke("SendMessage", username, roomName, message, userRole)
+            .catch(err => console.error("Error sending message:", err.toString()));
 
         document.getElementById("messageInput").value = "";
     }
@@ -261,4 +308,8 @@
             .message-menu a:hover {
                 background-color: #e9ecef;
             }
+
+    .likes-count {
+        font-size: 0.8rem;
+    }
 </style>

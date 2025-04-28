@@ -34,7 +34,7 @@ namespace KTU_forum.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Likes");
+                    b.ToTable("Likes", (string)null);
                 });
 
             modelBuilder.Entity("KTU_forum.Models.MessageModel", b =>
@@ -71,7 +71,7 @@ namespace KTU_forum.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("KTU_forum.Models.PostModel", b =>
@@ -104,7 +104,7 @@ namespace KTU_forum.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("KTU_forum.Models.ReplyModel", b =>
@@ -139,7 +139,7 @@ namespace KTU_forum.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Replies");
+                    b.ToTable("Replies", (string)null);
                 });
 
             modelBuilder.Entity("KTU_forum.Models.RoomModel", b =>
@@ -162,7 +162,7 @@ namespace KTU_forum.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Rooms");
+                    b.ToTable("Rooms", (string)null);
                 });
 
             modelBuilder.Entity("KTU_forum.Models.UserModel", b =>
@@ -214,7 +214,7 @@ namespace KTU_forum.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("KTU_forum.Models.LikeModel", b =>

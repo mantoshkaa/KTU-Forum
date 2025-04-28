@@ -1,11 +1,12 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
-using KTU_forum.Data;      // <-- your ApplicationDbContext namespace
+using KTU_forum.Data;
 using Microsoft.EntityFrameworkCore;
 using KTU_forum.Models;
 using System;
 using Microsoft.AspNetCore.Identity;
+using System.Collections.Generic;
 
 namespace KTU_forum.Hubs
 {
@@ -49,10 +50,11 @@ namespace KTU_forum.Hubs
                 var newMessage = new MessageModel
                 {
                     UserId = user.Id,
-                    RoomId = room.Id,  // Assign the RoomId
+                    RoomId = room.Id,
                     Content = message,
                     SentAt = DateTime.UtcNow,
-                    SenderRole = role
+                    SenderRole = role,
+                    Likes = new List<LikeModel>() // Initialize empty likes collection
                 };
 
                 _dbContext.Messages.Add(newMessage);
@@ -60,6 +62,9 @@ namespace KTU_forum.Hubs
 
                 // Broadcast the message to all clients in that room
                 await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message, user.ProfilePicturePath ?? "/pfps/default.png", role);
+
+                // Also send the new message ID back to the client
+                await Clients.Caller.SendAsync("MessageSent", newMessage.Id);
             }
             catch (Exception ex)
             {
@@ -67,6 +72,7 @@ namespace KTU_forum.Hubs
                 await Clients.Caller.SendAsync("ErrorMessage", "An error occurred sending your message");
             }
         }
+
         public async Task JoinRoom(string roomName)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
@@ -76,6 +82,8 @@ namespace KTU_forum.Hubs
         {
             try
             {
+                Console.WriteLine($"LikeMessage called with messageId: {messageId}, username: {username}");
+
                 // Find the user by username
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
                 if (user == null)
@@ -84,10 +92,12 @@ namespace KTU_forum.Hubs
                     return;
                 }
 
-                // Find the message by ID
+                // Find the message by ID with its likes and room
                 var message = await _dbContext.Messages
-                    .Include(m => m.Likes)  // Include the Likes collection to check if the user already liked
+                    .Include(m => m.Likes)
+                    .Include(m => m.Room)
                     .FirstOrDefaultAsync(m => m.Id == messageId);
+
                 if (message == null)
                 {
                     await Clients.Caller.SendAsync("ErrorMessage", "Message not found");
@@ -100,8 +110,8 @@ namespace KTU_forum.Hubs
 
                 if (existingLike != null)
                 {
-                    // The user has already liked this message, you can either toggle or do nothing
-                    await Clients.Caller.SendAsync("ErrorMessage", "You have already liked this message.");
+                    // The user has already liked this message
+                    await Clients.Caller.SendAsync("ErrorMessage", "You have already liked this message");
                     return;
                 }
 
@@ -116,23 +126,22 @@ namespace KTU_forum.Hubs
                 _dbContext.Likes.Add(like);
                 await _dbContext.SaveChangesAsync();
 
-                // Get the updated like count
-                var likeCount = message.Likes.Count;
+                // Get the updated count
+                int likeCount = await _dbContext.Likes.CountAsync(l => l.MessageId == messageId);
 
                 // Broadcast the updated like count to all clients in the room
-                var room = await _dbContext.Rooms.FirstOrDefaultAsync(r => r.Id == message.RoomId);
-                await Clients.Group(room.Name).SendAsync("UpdateLikes", messageId, likeCount);
+                if (message.Room != null)
+                {
+                    await Clients.Group(message.Room.Name).SendAsync("UpdateLikes", messageId, likeCount);
+                    Console.WriteLine($"UpdateLikes sent for messageId: {messageId}, likeCount: {likeCount}");
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in LikeMessage: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 await Clients.Caller.SendAsync("ErrorMessage", "An error occurred while liking the message");
             }
         }
-
-
-
-
     }
 }
-
