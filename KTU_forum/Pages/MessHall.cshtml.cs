@@ -25,6 +25,12 @@ namespace KTU_forum.Pages
             public string SenderProfilePic { get; set; }
             public string SenderRole { get; set; }
             public int LikesCount { get; set; }
+
+            // Reply functionality
+            public bool IsReply { get; set; }
+            public int? ReplyToId { get; set; }
+            public string ReplyToUsername { get; set; }
+            public string ReplyToContent { get; set; }
         }
         public List<MessageViewModel> Messages { get; set; }
         public MessHallModel(ApplicationDbContext context)
@@ -65,11 +71,12 @@ namespace KTU_forum.Pages
                 _context.SaveChanges();
             }
 
-            // Load messages with user information using a join
             Messages = _context.Messages
                 .Where(m => m.Room.Name == RoomName) // Only messages for this room
                 .Include(m => m.User)
-                .Include(m => m.Likes) // Include likes collection
+                .Include(m => m.Likes)
+                .Include(m => m.ReplyTo)
+                    .ThenInclude(r => r.User) // Include the user of the message being replied to
                 .OrderByDescending(m => m.SentAt)
                 .Take(50)
                 .OrderBy(m => m.SentAt)
@@ -79,9 +86,15 @@ namespace KTU_forum.Pages
                     Content = m.Content,
                     SentAt = m.SentAt,
                     SenderUsername = m.User.Username,
-                    SenderProfilePic = m.User.ProfilePicturePath ?? "/pfps/default.png",
+                    SenderProfilePic = m.User.ProfilePicturePath,
                     SenderRole = m.User.Role,
-                    LikesCount = m.Likes.Count // Get the count of likes from the included collection
+                    LikesCount = m.Likes.Count,
+
+                    // Reply information
+                    IsReply = m.ReplyToId.HasValue,
+                    ReplyToId = m.ReplyToId,
+                    ReplyToUsername = m.ReplyTo.User.Username,
+                    ReplyToContent = m.ReplyTo.Content
                 })
                 .ToList();
         }

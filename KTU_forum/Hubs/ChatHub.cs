@@ -143,5 +143,77 @@ namespace KTU_forum.Hubs
                 await Clients.Caller.SendAsync("ErrorMessage", "An error occurred while liking the message");
             }
         }
+
+        public async Task SendReply(string username, string roomName, string message, int replyToId, string role = null)
+        {
+            try
+            {
+                // Find the user by username
+                var user = _dbContext.Users.FirstOrDefault(u => u.Username == username);
+
+                if (user == null)
+                {
+                    await Clients.Caller.SendAsync("ErrorMessage", "User not found");
+                    return;
+                }
+
+                // Find the room by name
+                var room = _dbContext.Rooms.FirstOrDefault(r => r.Name == roomName);
+
+                if (room == null)
+                {
+                    await Clients.Caller.SendAsync("ErrorMessage", "Room not found");
+                    return;
+                }
+
+                // Find the message being replied to
+                var originalMessage = await _dbContext.Messages
+                    .Include(m => m.User)
+                    .FirstOrDefaultAsync(m => m.Id == replyToId);
+
+                if (originalMessage == null)
+                {
+                    await Clients.Caller.SendAsync("ErrorMessage", "Original message not found");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(role) && user != null)
+                {
+                    role = user.Role;
+                }
+
+                // Create and save message to database with userId, roomId, and replyToId
+                var newMessage = new MessageModel
+                {
+                    UserId = user.Id,
+                    RoomId = room.Id,
+                    Content = message,
+                    SentAt = DateTime.UtcNow,
+                    SenderRole = role,
+                    ReplyToId = replyToId,  // Set the reply reference
+                    Likes = new List<LikeModel>()
+                };
+
+                _dbContext.Messages.Add(newMessage);
+                await _dbContext.SaveChangesAsync();
+
+                // Send profile pic as-is
+                string profilePic = user.ProfilePicturePath;
+
+                // Get original message info for the reply
+                string originalSender = originalMessage.User.Username;
+                string originalContent = originalMessage.Content;
+
+                // Broadcast the reply message to all clients in that room
+                await Clients.Group(roomName).SendAsync("ReceiveReply",
+                    username, message, profilePic, role, newMessage.Id,
+                    replyToId, originalSender, originalContent);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in SendReply: {ex.Message}");
+                await Clients.Caller.SendAsync("ErrorMessage", "An error occurred sending your reply");
+            }
+        }
     }
 }

@@ -15,10 +15,33 @@
                     @foreach (var message in Model.Messages)
                     {
                         var formattedTime = message.SentAt.ToString("yyyy-MM-dd | HH:mm");
-                        <li class="d-flex align-items-start mb-3 message-item position-relative">
-                            <img src="@message.SenderProfilePic" alt="@message.SenderUsername's profile picture" class="rounded-circle profile-pic"
-                                 style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
-                            <div>
+                        <li class="d-flex align-items-start mb-3 message-item position-relative" id="message-@message.MessageId">
+                            @if (string.IsNullOrEmpty(message.SenderProfilePic))
+                            {
+                                <div class="profile-pic-placeholder rounded-circle bg-light d-flex justify-content-center align-items-center"
+                                     style="width: 40px; height: 40px; margin-right: 10px;">
+                                    <i class="bi bi-person-circle" style="font-size: 1.5rem;"></i>
+                                </div>
+                            }
+                            else
+                            {
+                                <img src="@message.SenderProfilePic" alt="@message.SenderUsername's profile picture" class="rounded-circle profile-pic"
+                                     style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
+                            }
+                            <div style="width: 100%;">
+                                <!-- Reply indicator (if this message is a reply) -->
+                                @if (message.IsReply)
+                                {
+                                    <div class="reply-info mb-1 border-start border-2 ps-2" style="border-color: #e0e0e0 !important; font-size: 0.85rem; background-color: #f8f9fa; border-radius: 0.25rem; padding: 0.25rem;">
+                                        <div class="reply-sender fw-bold text-muted">
+                                            <i class="bi bi-reply"></i> Replying to @message.ReplyToUsername
+                                        </div>
+                                        <div class="reply-content text-muted text-truncate" style="max-width: 90%;">
+                                            @message.ReplyToContent
+                                        </div>
+                                    </div>
+                                }
+
                                 <small class="text-muted">
                                     @message.SenderUsername
                                     @if (!string.IsNullOrEmpty(message.SenderRole))
@@ -38,12 +61,14 @@
                                     </span>
                                 </div>
                             </div>
-
                             <div class="message-actions position-absolute top-0 end-0 me-2 mt-2">
                                 <button class="btn btn-sm btn-light message-options-btn">...</button>
                                 <div class="message-menu d-none bg-light border rounded shadow-sm p-2">
                                     <button class="btn btn-sm btn-outline-primary me-1 like-btn" data-message-id="@message.MessageId">👍 Like</button>
-                                    <button class="btn btn-sm btn-outline-primary reply-btn">↩️ Reply</button>
+                                    <button class="btn btn-sm btn-outline-primary reply-btn" data-message-id="@message.MessageId"
+                                            data-sender="@message.SenderUsername" data-content="@message.Content">
+                                        ↩️ Reply
+                                    </button>
                                     <a href="/PublicProfile/@message.SenderUsername" class="btn btn-sm btn-outline-primary view-profile-btn">
                                         👤 View Profile
                                     </a>
@@ -55,6 +80,18 @@
             </div>
             <!-- Message Input Area -->
             <div class="message-input-area mt-3">
+                <!-- Reply info box (hidden by default) -->
+                <div id="replyContainer" class="reply-container bg-light p-2 mb-2 rounded d-none">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold"><i class="bi bi-reply"></i> Replying to <span id="replyToUsername"></span></span>
+                            <p class="mb-0 text-muted small text-truncate" id="replyToContent"></p>
+                        </div>
+                        <button id="cancelReplyBtn" class="btn btn-sm text-muted" title="Cancel reply">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
                 <div class="d-flex">
                     <input type="text" id="messageInput" class="form-control me-2" placeholder="Enter your message" />
                     <button id="sendButton" class="btn btn-primary">Send</button>
@@ -71,6 +108,8 @@
     var profilePicPath = '@profilePic';
     var roomName = '@roomName';
     var userRole = '@userRole';
+    let isReplying = false;
+    let replyToId = null;
 
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/chatHub")
@@ -208,6 +247,173 @@
         });
     });
 
+        // Add this ReceiveReply handler after your existing ReceiveMessage handler
+
+    connection.on("ReceiveReply", function (user, message, profilePic, role, messageId, replyToId, originalSender, originalContent) {
+        const messagesList = document.getElementById("messagesList");
+        const messageItem = document.createElement("li");
+        messageItem.classList.add("d-flex", "align-items-start", "mb-3", "message-item", "position-relative");
+        messageItem.id = "message-" + messageId;
+
+        // Check if profile pic exists
+        if (!profilePic || profilePic === "") {
+            // Create placeholder profile icon
+            const profilePlaceholder = document.createElement("div");
+            profilePlaceholder.classList.add("profile-pic-placeholder", "rounded-circle", "bg-light", "d-flex", "justify-content-center", "align-items-center");
+            profilePlaceholder.style.width = "40px";
+            profilePlaceholder.style.height = "40px";
+            profilePlaceholder.style.marginRight = "10px";
+
+            const icon = document.createElement("i");
+            icon.classList.add("bi", "bi-person-circle");
+            icon.style.fontSize = "1.5rem";
+
+            profilePlaceholder.appendChild(icon);
+            messageItem.appendChild(profilePlaceholder);
+        } else {
+            // Use actual profile image
+            const img = document.createElement("img");
+            img.src = profilePic;
+            img.alt = user + "'s profile picture";
+            img.classList.add("rounded-circle", "profile-pic");
+            img.style.width = "40px";
+            img.style.height = "40px";
+            img.style.objectFit = "cover";
+            img.style.marginRight = "10px";
+            messageItem.appendChild(img);
+        }
+
+        // Content container
+        const contentContainer = document.createElement("div");
+        contentContainer.style.width = "100%";
+
+        // Create reply info
+        const replyInfo = document.createElement("div");
+        replyInfo.classList.add("reply-info", "mb-1", "border-start", "border-2", "ps-2");
+        replyInfo.style.borderColor = "#e0e0e0 !important";
+        replyInfo.style.fontSize = "0.85rem";
+        replyInfo.style.backgroundColor = "#f8f9fa";
+        replyInfo.style.borderRadius = "0.25rem";
+        replyInfo.style.padding = "0.25rem";
+
+        const replySender = document.createElement("div");
+        replySender.classList.add("reply-sender", "fw-bold", "text-muted");
+        replySender.innerHTML = `<i class="bi bi-reply"></i> Replying to ${originalSender}`;
+
+        const replyContent = document.createElement("div");
+        replyContent.classList.add("reply-content", "text-muted", "text-truncate");
+        replyContent.style.maxWidth = "90%";
+        replyContent.textContent = originalContent;
+
+        replyInfo.appendChild(replySender);
+        replyInfo.appendChild(replyContent);
+        contentContainer.appendChild(replyInfo);
+
+        const meta = document.createElement("small");
+        meta.classList.add("text-muted");
+
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = currentDate.getDate().toString().padStart(2, '0');
+        const hours = currentDate.getHours().toString().padStart(2, '0');
+        const minutes = currentDate.getMinutes().toString().padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day} | ${hours}:${minutes}`;
+
+        // Create the username text node first
+        const usernameText = document.createTextNode(user);
+        meta.appendChild(usernameText);
+
+        // Add role badge if role exists
+        if (role) {
+            const roleBadge = document.createElement("span");
+            roleBadge.classList.add("badge", "bg-success", "text-white", "ms-1");
+            roleBadge.style.opacity = "0.4";
+            roleBadge.style.fontSize = "0.75rem";
+            roleBadge.textContent = role;
+            meta.appendChild(roleBadge);
+        }
+
+        // Add the timestamp
+        const timestampText = document.createTextNode(` • ${formattedDate}`);
+        meta.appendChild(timestampText);
+        contentContainer.appendChild(meta);
+
+        const messageText = document.createElement("p");
+        messageText.classList.add("mb-1");
+        messageText.textContent = message;
+        contentContainer.appendChild(messageText);
+
+        // Add likes count element
+        const likesContainer = document.createElement("div");
+        likesContainer.classList.add("d-flex", "align-items-center");
+
+        const likesCount = document.createElement("span");
+        likesCount.classList.add("likes-count", "badge", "bg-light", "text-dark", "me-2");
+        likesCount.id = "likes-" + messageId;
+
+        likesContainer.appendChild(likesCount);
+        contentContainer.appendChild(likesContainer);
+
+        // Message actions
+        const messageActions = document.createElement("div");
+        messageActions.classList.add("message-actions", "position-absolute", "top-0", "end-0", "me-2", "mt-2");
+
+        const optionsButton = document.createElement("button");
+        optionsButton.classList.add("btn", "btn-sm", "btn-light", "message-options-btn");
+        optionsButton.textContent = "...";
+
+        const messageMenu = document.createElement("div");
+        messageMenu.classList.add("message-menu", "d-none", "bg-light", "border", "rounded", "shadow-sm", "p-2");
+
+        const likeButton = document.createElement("button");
+        likeButton.classList.add("btn", "btn-sm", "btn-outline-primary", "me-1", "like-btn");
+        likeButton.textContent = "👍 Like";
+        likeButton.dataset.messageId = messageId;
+
+        const replyButton = document.createElement("button");
+        replyButton.classList.add("btn", "btn-sm", "btn-outline-primary", "reply-btn");
+        replyButton.textContent = "↩️ Reply";
+        replyButton.dataset.messageId = messageId;
+        replyButton.dataset.sender = user;
+        replyButton.dataset.content = message;
+
+        const viewProfileLink = document.createElement("a");
+        viewProfileLink.href = `/PublicProfile/${user}`;
+        viewProfileLink.classList.add("btn", "btn-sm", "btn-outline-primary", "view-profile-btn");
+        viewProfileLink.textContent = "👤 View Profile";
+
+        messageMenu.appendChild(likeButton);
+        messageMenu.appendChild(replyButton);
+        messageMenu.appendChild(viewProfileLink);
+        messageActions.appendChild(optionsButton);
+        messageActions.appendChild(messageMenu);
+
+        messageItem.appendChild(contentContainer);
+        messageItem.appendChild(messageActions);
+        messagesList.appendChild(messageItem);
+
+        messagesList.scrollTop = messagesList.scrollHeight;
+
+        // Add the click event to the like button
+        likeButton.addEventListener("click", function () {
+            connection.invoke("LikeMessage", parseInt(messageId), username)
+                .catch(err => console.error("Error liking message:", err.toString()));
+        });
+
+        // Add the click event to the reply button
+        replyButton.addEventListener("click", function () {
+            isReplying = true;
+            replyToId = this.dataset.messageId;
+
+            document.getElementById("replyContainer").classList.remove("d-none");
+            document.getElementById("replyToUsername").textContent = this.dataset.sender;
+            document.getElementById("replyToContent").textContent = this.dataset.content;
+
+            document.getElementById("messageInput").focus();
+        });
+    });
+
     document.addEventListener("click", function (event) {
         if (event.target.classList.contains("message-options-btn")) {
             const messageActions = event.target.closest(".message-actions");
@@ -238,7 +444,44 @@
         }
     });
 
-    function sendMessage() {
+        // Handle reply button clicks
+    document.addEventListener("click", function (event) {
+        // Reply button click handling
+        if (event.target.classList.contains("reply-btn")) {
+            const messageId = event.target.dataset.messageId;
+            const sender = event.target.dataset.sender;
+            const content = event.target.dataset.content;
+
+            // Set reply state
+            isReplying = true;
+            replyToId = messageId;
+
+            // Show reply UI
+            document.getElementById("replyContainer").classList.remove("d-none");
+            document.getElementById("replyToUsername").textContent = sender;
+            document.getElementById("replyToContent").textContent = content;
+
+            // Focus the input field
+            document.getElementById("messageInput").focus();
+
+            // Close any open menus
+            document.querySelectorAll(".message-menu:not(.d-none)").forEach(menu => {
+                menu.classList.add("d-none");
+            });
+        }
+    });
+
+        document.getElementById("cancelReplyBtn").addEventListener("click", function() {
+        cancelReply();
+    });
+
+        function cancelReply() {
+        isReplying = false;
+        replyToId = null;
+        document.getElementById("replyContainer").classList.add("d-none");
+    }
+
+        function sendMessage() {
         const message = document.getElementById("messageInput").value;
         if (!username) {
             alert("Please log in.");
@@ -249,10 +492,19 @@
             return;
         }
 
-        connection.invoke("SendMessage", username, roomName, message, userRole)
-            .catch(err => console.error("Error sending message:", err.toString()));
+        if (isReplying && replyToId) {
+            // Send as a reply
+            connection.invoke("SendReply", username, roomName, message, parseInt(replyToId), userRole)
+                .catch(err => console.error("Error sending reply:", err.toString()));
+        } else {
+            // Send as a normal message
+            connection.invoke("SendMessage", username, roomName, message, userRole)
+                .catch(err => console.error("Error sending message:", err.toString()));
+        }
 
+        // Clear input and reset reply state
         document.getElementById("messageInput").value = "";
+        cancelReply();
     }
 
     // Scroll to bottom when page loads
