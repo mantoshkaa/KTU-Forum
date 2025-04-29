@@ -1,20 +1,21 @@
-# Use the official .NET 7 SDK image to build the app
+# Use the official .NET 7 SDK image
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /app
 
-# Copy csproj and restore dependencies
-COPY *.sln ./
-COPY KTU_forum/*.csproj ./KTU_forum/
-RUN dotnet restore ./KTU_forum/KTU_forum.csproj
+# Copy solution and project files
+COPY *.csproj ./
+RUN dotnet restore
 
-# Copy everything else and build the app
+# Copy everything else
 COPY . ./
-WORKDIR /app/KTU_forum
 RUN dotnet publish -c Release -o out
 
-
-# Use a runtime-only image for production
+# Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
 WORKDIR /app
-COPY --from=build /app/KTU_forum/out ./
+COPY --from=build /app/out ./
+
+ENV ASPNETCORE_URLS=http://+:10000
+EXPOSE 10000
+
 ENTRYPOINT ["dotnet", "KTU_forum.dll"]
