@@ -16,17 +16,19 @@
                     {
                         var formattedTime = message.SentAt.ToString("yyyy-MM-dd | HH:mm");
                         <li class="d-flex align-items-start mb-3 message-item position-relative" id="message-@message.MessageId">
-                            @if (string.IsNullOrEmpty(message.SenderProfilePic))
+                            @if (string.IsNullOrWhiteSpace(message.SenderProfilePic))
                             {
-                                <div class="profile-pic-placeholder rounded-circle bg-light d-flex justify-content-center align-items-center"
-                                     style="width: 40px; height: 40px; margin-right: 10px;">
-                                    <i class="bi bi-person-circle" style="font-size: 1.5rem;"></i>
-                                </div>
+                                <img src="@(string.IsNullOrWhiteSpace(message.SenderProfilePic)
+                                         ? "profile-pictures/default.png"
+                                         : message.SenderProfilePic)"
+                                         class="rounded-circle profile-pic me-2"
+                                         style="width: 40px; height: 40px;" />
                             }
                             else
                             {
-                                <img src="@message.SenderProfilePic" alt="@message.SenderUsername's profile picture" class="rounded-circle profile-pic"
-                                     style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
+                                <img src="@message.SenderProfilePic"
+                                     class="rounded-circle profile-pic"
+                                     style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;" />
                             }
                             <div style="width: 100%;">
                                 <!-- Reply indicator (if this message is a reply) -->
@@ -149,8 +151,7 @@
         messageItem.classList.add("d-flex", "align-items-start", "mb-3", "message-item", "position-relative");
 
         const img = document.createElement("img");
-        img.src = profilePic || '/pfps/default.png'; // fallback
-        img.alt = user + "'s profile picture";
+        img.src = profilePic && profilePic.trim() !== "" ? profilePic : "/profile-pictures/default.png";
         img.classList.add("rounded-circle", "profile-pic");
         img.style.width = "40px";
         img.style.height = "40px";
@@ -255,32 +256,32 @@
         messageItem.classList.add("d-flex", "align-items-start", "mb-3", "message-item", "position-relative");
         messageItem.id = "message-" + messageId;
 
-        // Check if profile pic exists
-        if (!profilePic || profilePic === "") {
-            // Create placeholder profile icon
-            const profilePlaceholder = document.createElement("div");
-            profilePlaceholder.classList.add("profile-pic-placeholder", "rounded-circle", "bg-light", "d-flex", "justify-content-center", "align-items-center");
-            profilePlaceholder.style.width = "40px";
-            profilePlaceholder.style.height = "40px";
-            profilePlaceholder.style.marginRight = "10px";
+    // Use default image if profilePic is missing or empty
+    const profileImageSrc = profilePic && profilePic.trim() !== "" ? profilePic : "/profile-pictures/default.png";
 
-            const icon = document.createElement("i");
-            icon.classList.add("bi", "bi-person-circle");
-            icon.style.fontSize = "1.5rem";
+        if (!profilePic || profilePic.trim() === "") {
+        const profilePlaceholder = document.createElement("div");
+        profilePlaceholder.classList.add("profile-pic-placeholder", "rounded-circle", "bg-light", "d-flex", "justify-content-center", "align-items-center");
+        profilePlaceholder.style.width = "40px";
+        profilePlaceholder.style.height = "40px";
+        profilePlaceholder.style.marginRight = "10px";
 
-            profilePlaceholder.appendChild(icon);
-            messageItem.appendChild(profilePlaceholder);
-        } else {
-            // Use actual profile image
-            const img = document.createElement("img");
-            img.src = profilePic;
-            img.alt = user + "'s profile picture";
-            img.classList.add("rounded-circle", "profile-pic");
-            img.style.width = "40px";
-            img.style.height = "40px";
-            img.style.objectFit = "cover";
-            img.style.marginRight = "10px";
-            messageItem.appendChild(img);
+        const icon = document.createElement("i");
+        icon.classList.add("bi", "bi-person-circle");
+        icon.style.fontSize = "1.5rem";
+
+        profilePlaceholder.appendChild(icon);
+        messageItem.appendChild(profilePlaceholder);
+        } 
+        else {
+        const img = document.createElement("img");
+        img.src = profilePic;
+        img.classList.add("rounded-circle", "profile-pic");
+        img.style.width = "40px";
+        img.style.height = "40px";
+        img.style.objectFit = "cover";
+        img.style.marginRight = "10px";
+        messageItem.appendChild(img);
         }
 
         // Content container

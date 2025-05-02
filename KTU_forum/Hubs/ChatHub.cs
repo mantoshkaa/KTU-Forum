@@ -61,7 +61,7 @@ namespace KTU_forum.Hubs
                 await _dbContext.SaveChangesAsync();
 
                 // Broadcast the message to all clients in that room
-                await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message, user.ProfilePicturePath ?? "/pfps/default.png", role);
+                await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message, user.ProfilePicturePath ?? "/profile-pictures/default.png", role);
 
                 // Also send the new message ID back to the client
                 await Clients.Caller.SendAsync("MessageSent", newMessage.Id);

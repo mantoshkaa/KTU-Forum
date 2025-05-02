@@ -46,17 +46,17 @@ namespace KTU_forum.Pages
                 var userr = _context.Users.FirstOrDefault(u => u.Username == Username);
                 if (userr != null)
                 {
-                    ProfilePicturePath = userr.ProfilePicturePath ?? "/pfps/default.png";
+                    ProfilePicturePath = userr.ProfilePicturePath ?? "/profile-pictures/default.png";
                     UserRole = userr.Role; // Make sure to set the user role
                 }
                 else
                 {
-                    ProfilePicturePath = "/pfps/default.png";
+                    ProfilePicturePath = "/profile-pictures/default.png";
                 }
             }
             else
             {
-                ProfilePicturePath = "/pfps/default.png";
+                ProfilePicturePath = "/profile-pictures/default.png";
             }
             var messHallRoom = _context.Rooms.FirstOrDefault(r => r.Name == RoomName);
             // If the room doesn't exist, create and save it
