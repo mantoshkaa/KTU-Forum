@@ -26,6 +26,10 @@ namespace KTU_forum.Pages
         [BindProperty]
         public string Password { get; set; }
 
+        [BindProperty(SupportsGet = true)]
+        public string ReturnUrl { get; set; }
+
+
         public void OnGet()
         {
 
