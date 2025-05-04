@@ -45,17 +45,19 @@
                                 </div>
 
                                 <!-- Username input -->
+                                <!-- Username -->
                                 <div class="form-floating mb-3">
-                                    <input class="form-control" id="Username" name="Username" type="text" placeholder="Create your username" required oninput="checkUsernameAvailability()" />
-                                    <label for="Username">Username</label>
-                                    <div class="invalid-feedback" data-sb-feedback="username:required">A username is required.</div>
+                                    <input asp-for="NewUser.Username" class="form-control" type="text" placeholder="Create your username" oninput="checkUsernameAvailability()" />
+                                    <label asp-for="NewUser.Username">Username</label>
+                                    <span asp-validation-for="NewUser.Username" class="text-danger"></span>
+                                
                                     <!-- Error message will be dynamically added here -->
                                 </div>
                                 <!-- Password input-->
                                 <div class="form-floating mb-3">
-                                    <input class="form-control" id="PasswordHash" name="PasswordHash" type="password" placeholder="Enter your password" required />
-                                    <label for="PasswordHash">Password</label>
-                                    <div class="invalid-feedback" data-sb-feedback="password:required">A password is required.</div>
+                                    <input asp-for="NewUser.PasswordHash" class="form-control" id="PasswordHash" type="password" placeholder="Enter your password" />
+                                    <label asp-for="NewUser.PasswordHash">Password</label>
+                                    <span asp-validation-for="NewUser.PasswordHash" class="text-danger"></span>
                                 </div>
                                 <br />
                                 <!-- Password Visibility Toggle -->

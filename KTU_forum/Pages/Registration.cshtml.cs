@@ -66,7 +66,12 @@ namespace KTU_forum.Pages
                 ModelState.AddModelError("NewUser.Username", "This username is already taken.");
                 return Page();
             }
-            
+            if (!IsPasswordValid(NewUser.PasswordHash))
+            {
+                ModelState.AddModelError("NewUser.PasswordHash", "Password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number.");
+                return Page();
+            }
+
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(NewUser.PasswordHash); // Hash the password before storing it
                        
             NewUser.PasswordHash = hashedPassword; // Store the hashed password in the database
@@ -133,6 +138,18 @@ namespace KTU_forum.Pages
             await smtp.SendAsync(message);
             await smtp.DisconnectAsync(true);
         }
+        private bool IsPasswordValid(string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                return false;
+
+            var hasUpper = password.Any(char.IsUpper);
+            var hasLower = password.Any(char.IsLower);
+            var hasDigit = password.Any(char.IsDigit);
+
+            return password.Length >= 6 && hasUpper && hasLower && hasDigit;
+        }
+
 
 
     }
