@@ -560,6 +560,12 @@
             const likeBtn = event.target.closest(".like-btn");
             const messageId = likeBtn.dataset.messageId;
             const hasLiked = likeBtn.dataset.hasLiked === "true";
+            
+            // Check if the user is logged in (username should be set)
+            if (!username || username.trim() === "") {
+                alert("Please log in.");
+                return; // Stop further execution if not logged in
+            }
 
             // Close the menu immediately
             const menu = likeBtn.closest(".message-menu");
