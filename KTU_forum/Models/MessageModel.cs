@@ -26,6 +26,8 @@ namespace KTU_forum.Models
         public ICollection<LikeModel> Likes { get; set; }
         public int LikesCount => Likes?.Count ?? 0;  // Using the count of the Likes collection
 
+        public bool IsEdited { get; set; } = false;
+
         public int? ReplyToId { get; set; } // The ID of the message this is replying to (nullable)
         public MessageModel ReplyTo { get; set; } // Navigation property to the message being replied to
 

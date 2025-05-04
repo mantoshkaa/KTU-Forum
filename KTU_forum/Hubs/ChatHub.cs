@@ -129,11 +129,11 @@ namespace KTU_forum.Hubs
                 // Get the updated count
                 int likeCount = await _dbContext.Likes.CountAsync(l => l.MessageId == messageId);
 
-                // Broadcast the updated like count to all clients in the room
+                // Broadcast the updated like status to all clients in the room
                 if (message.Room != null)
                 {
-                    await Clients.Group(message.Room.Name).SendAsync("UpdateLikes", messageId, likeCount);
-                    Console.WriteLine($"UpdateLikes sent for messageId: {messageId}, likeCount: {likeCount}");
+                    await Clients.Group(message.Room.Name).SendAsync("UpdateLikeStatus", messageId, true, likeCount);
+                    Console.WriteLine($"UpdateLikeStatus sent for messageId: {messageId}, hasLiked: true, likeCount: {likeCount}");
                 }
             }
             catch (Exception ex)
@@ -213,6 +213,146 @@ namespace KTU_forum.Hubs
             {
                 Console.WriteLine($"Error in SendReply: {ex.Message}");
                 await Clients.Caller.SendAsync("ErrorMessage", "An error occurred sending your reply");
+            }
+        }
+
+        public async Task RemoveLike(int messageId, string username)
+{
+    try
+    {
+        // Find the user by username first
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+        if (user == null)
+        {
+            await Clients.Caller.SendAsync("ErrorMessage", "User not found");
+            return;
+        }
+
+        // Include the User navigation property to avoid null reference
+        var message = await _dbContext.Messages
+            .Include(m => m.Likes)
+            .Include(m => m.Room)
+            .FirstOrDefaultAsync(m => m.Id == messageId);
+
+        if (message == null)
+        {
+            await Clients.Caller.SendAsync("ErrorMessage", "Message not found");
+            return;
+        }
+
+        // Find the like by both message ID and user ID
+        var like = await _dbContext.Likes
+            .FirstOrDefaultAsync(l => l.MessageId == messageId && l.UserId == user.Id);
+
+        if (like == null)
+        {
+            await Clients.Caller.SendAsync("ErrorMessage", "Like not found");
+            return;
+        }
+
+        // Remove the like
+        _dbContext.Likes.Remove(like);
+        await _dbContext.SaveChangesAsync();
+
+        // Get the updated count
+        int likeCount = await _dbContext.Likes.CountAsync(l => l.MessageId == messageId);
+
+        // Notify all clients in the room about the like status change
+        await Clients.Group(message.Room.Name).SendAsync("UpdateLikeStatus", messageId, false, likeCount);
+        Console.WriteLine($"UpdateLikeStatus sent for messageId: {messageId}, hasLiked: false, likeCount: {likeCount}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error in RemoveLike: {ex.Message}");
+        Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        await Clients.Caller.SendAsync("ErrorMessage", "An error occurred while removing the like");
+    }
+}
+
+        public async Task DeleteMessage(int messageId, string username)
+        {
+            var message = await _dbContext.Messages
+                .Include(m => m.User)
+                .Include(m => m.Room)
+                .Include(m => m.Likes)
+                .FirstOrDefaultAsync(m => m.Id == messageId);
+
+            if (message == null)
+            {
+                await Clients.Caller.SendAsync("ErrorMessage", "Message not found.");
+                return;
+            }
+
+            // Only allow the message owner to delete it
+            if (message.User.Username != username)
+            {
+                await Clients.Caller.SendAsync("ErrorMessage", "You can only delete your own messages.");
+                return;
+            }
+
+            // Store room name before deleting for broadcasting
+            var roomName = message.Room.Name;
+
+            // Remove all likes for this message
+            var likes = await _dbContext.Likes.Where(l => l.MessageId == messageId).ToListAsync();
+            _dbContext.Likes.RemoveRange(likes);
+
+            // Remove the message
+            _dbContext.Messages.Remove(message);
+            await _dbContext.SaveChangesAsync();
+
+            // Notify all clients about the deletion
+            await Clients.Group(roomName).SendAsync("MessageDeleted", messageId);
+
+            // Log for debugging
+            Console.WriteLine($"Message {messageId} deleted by {username}");
+        }
+
+        // Add this method to your ChatHub.cs file
+        public async Task EditMessage(int messageId, string username, string newContent)
+        {
+            try
+            {
+                // Find the message to edit
+                var message = await _dbContext.Messages
+                    .Include(m => m.User)
+                    .Include(m => m.Room)
+                    .FirstOrDefaultAsync(m => m.Id == messageId);
+
+                if (message == null)
+                {
+                    await Clients.Caller.SendAsync("ErrorMessage", "Message not found.");
+                    return;
+                }
+
+                // Only allow the message owner to edit it
+                if (message.User.Username != username)
+                {
+                    await Clients.Caller.SendAsync("ErrorMessage", "You can only edit your own messages.");
+                    return;
+                }
+
+                // Store room name for broadcasting
+                var roomName = message.Room.Name;
+
+                // Update the message content
+                message.Content = newContent;
+                message.IsEdited = true;  // You'll need to add this field to your MessageModel
+
+                // Save changes
+                await _dbContext.SaveChangesAsync();
+
+                // Notify all clients about the edit
+                await Clients.Group(roomName).SendAsync("MessageEdited", messageId, newContent);
+
+                // Log for debugging
+                Console.WriteLine($"Message {messageId} edited by {username}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in EditMessage: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                await Clients.Caller.SendAsync("ErrorMessage", "An error occurred while editing the message");
             }
         }
     }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.Eventing.Reader;
 namespace KTU_forum.Pages
 {
     public class MessHallModel : PageModel
@@ -25,12 +26,12 @@ namespace KTU_forum.Pages
             public string SenderProfilePic { get; set; }
             public string SenderRole { get; set; }
             public int LikesCount { get; set; }
-
-            // Reply functionality
             public bool IsReply { get; set; }
             public int? ReplyToId { get; set; }
             public string ReplyToUsername { get; set; }
             public string ReplyToContent { get; set; }
+            public bool hasLiked {  get; set; }
+            public bool IsEdited { get; set; }
         }
         public List<MessageViewModel> Messages { get; set; }
         public MessHallModel(ApplicationDbContext context)
@@ -94,7 +95,9 @@ namespace KTU_forum.Pages
                     IsReply = m.ReplyToId.HasValue,
                     ReplyToId = m.ReplyToId,
                     ReplyToUsername = m.ReplyTo.User.Username,
-                    ReplyToContent = m.ReplyTo.Content
+                    ReplyToContent = m.ReplyTo.Content,
+                    hasLiked = m.Likes.Any(l => l.User.Username == Username),
+                    IsEdited = m.IsEdited
                 })
                 .ToList();
         }
