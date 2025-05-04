@@ -39,10 +39,9 @@
                             <form method="post">
                                 <!-- Email address input-->
                                 <div class="form-floating mb-3">
-                                    <input class="form-control" id="Email" name="Email" type="email" placeholder="name@ktu.lt" required />
-                                    <label for="Email">Email address</label>
-                                    <div class="invalid-feedback">An email is required.</div>
-                                    <div class="invalid-feedback" data-sb-feedback="email:email">Email is not valid.</div>
+                                    <input asp-for="NewUser.Email" class="form-control" id="Email" type="email" placeholder="name@ktu.lt" required />
+                                    <label asp-for="NewUser.Email">Email address</label>
+                                    <span asp-validation-for="NewUser.Email" class="text-danger"></span>
                                 </div>
 
                                 <!-- Username input -->

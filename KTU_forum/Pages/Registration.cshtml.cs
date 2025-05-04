@@ -50,6 +50,14 @@ namespace KTU_forum.Pages
                 return Page();
             }
 
+            // Check if email already exists
+            if (_context.Users.Any(u => u.Email == NewUser.Email))
+            {
+                _logger.LogWarning($"Email '{NewUser.Email}' is already registered.");
+                ModelState.AddModelError("NewUser.Email", "An account with this email already exists.");
+                return Page();
+            }
+
             // Check if username already exists
             if (_context.Users.Any(u => u.Username == NewUser.Username))
             {
