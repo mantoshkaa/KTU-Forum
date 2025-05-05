@@ -89,15 +89,16 @@
                                         <input type="password" class="form-control" id="Password" name="NewPassword" placeholder="Enter new password" />
                                     </div>
 
-                                    <!-- Save Changes Button -->
                                     <div class="d-flex justify-content-between mt-3">
                                         <button type="submit" class="btn btn-primary">Save Changes</button>
-
-                                        <form method="post" asp-page-handler="Delete" onsubmit="return confirmDelete()">
-                                            <button type="submit" class="btn btn-danger">Delete Account</button>
-                                        </form>
-                                    </div>
                                 </form>
+
+                                    
+                                <!-- Separate delete form, positioned inline -->
+                                <form method="post" asp-page-handler="Delete" onsubmit="return confirmDelete()" class="d-inline">
+                                    <button type="submit" class="btn btn-danger">Delete Account</button>
+                                </form>
+                            </div>
                             </div>
                         </div>
                     </div>

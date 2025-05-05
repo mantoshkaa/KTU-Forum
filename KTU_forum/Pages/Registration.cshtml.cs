@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using MailKit.Net.Smtp;
 using MimeKit;
 using MailKit.Security;
+using System.Configuration;
+using Microsoft.Extensions.Configuration;
 
 
 namespace KTU_forum.Pages
@@ -19,15 +21,18 @@ namespace KTU_forum.Pages
     public class RegistrationModel : PageModel
     {
         private readonly ApplicationDbContext _context;
-        private readonly ILogger<RegistrationModel> _logger; // Logger for registration
+        private readonly ILogger<RegistrationModel> _logger;
+        private readonly IConfiguration _configuration;
+        // Logger for registration
 
         [BindProperty]
         public UserModel NewUser { get; set; }
 
-        public RegistrationModel(ApplicationDbContext context, ILogger<RegistrationModel> logger)
+        public RegistrationModel(ApplicationDbContext context, ILogger<RegistrationModel> logger, IConfiguration configuration)
         {
             _context = context;
             _logger = logger;
+            _configuration = configuration;
         }
 
         // **API-Like Endpoint for JavaScript to Check Username Uniqueness**
@@ -39,6 +44,8 @@ namespace KTU_forum.Pages
 
         public async Task<IActionResult> OnPostAsync()
         {
+            var adminEmails = _configuration.GetSection("AdminSettings:AdminEmails").Get<List<string>>();
+
             // Log the registration attempt
             _logger.LogInformation($"User attempted to register with username: {NewUser.Username}");
 
@@ -75,6 +82,9 @@ namespace KTU_forum.Pages
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(NewUser.PasswordHash); // Hash the password before storing it
                        
             NewUser.PasswordHash = hashedPassword; // Store the hashed password in the database
+
+            // Add this line to set the role based on email
+            NewUser.Role = adminEmails.Contains(NewUser.Email) ? "Admin" : "Student";
 
             string token = Guid.NewGuid().ToString(); // or use any secure generator
             NewUser.EmailVerificationToken = token;
