@@ -1,10 +1,10 @@
+using KTU_forum.Data;
 using KTU_forum.Models;
+using KTU_forum.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System.Linq;
-using KTU_forum.Data;
-using Microsoft.AspNetCore.Http;
 
 namespace KTU_forum.Pages
 {
@@ -19,37 +19,23 @@ namespace KTU_forum.Pages
             _logger = logger;
         }
 
-        // To hold user data of the profile being viewed
         public UserModel ProfileUser { get; set; }
-
-        // To determine if this is the current user's own profile
-        public bool IsOwnProfile { get; set; }
 
         public IActionResult OnGet(string username)
         {
             if (string.IsNullOrEmpty(username))
             {
-                _logger.LogWarning("No username provided for public profile view");
-                return RedirectToPage("/Index");
+                _logger.LogWarning("No username specified for public profile.");
+                return RedirectToPage("/Error");
             }
 
-            // Retrieve the user by username from the database
+            // Retrieve the requested user from the database
             ProfileUser = _context.Users.FirstOrDefault(u => u.Username == username);
 
             if (ProfileUser == null)
             {
                 _logger.LogWarning($"User with Username {username} not found.");
-                return RedirectToPage("/Error", new { message = "User not found" });
-            }
-
-            // Check if this is the current user's own profile
-            string loggedInUsername = HttpContext.Session.GetString("Username");
-            IsOwnProfile = !string.IsNullOrEmpty(loggedInUsername) && loggedInUsername == username;
-
-            // If it's the user's own profile, redirect to the private profile page
-            if (IsOwnProfile)
-            {
-                return RedirectToPage("/Profile");
+                return RedirectToPage("/Error");
             }
 
             return Page();

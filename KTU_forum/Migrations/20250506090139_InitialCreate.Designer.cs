@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KTU_forum.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250407211203_AddedImageAsMessageType")]
-    partial class AddedImageAsMessageType
+    [Migration("20250506090139_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,21 @@ namespace KTU_forum.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("KTU_forum.Models.LikeModel", b =>
+                {
+                    b.Property<int>("MessageId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("MessageId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Likes");
+                });
+
             modelBuilder.Entity("KTU_forum.Models.MessageModel", b =>
                 {
                     b.Property<int>("Id")
@@ -34,13 +49,24 @@ namespace KTU_forum.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
-                        .HasColumnType("text");
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("ImagePath")
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<bool>("IsEdited")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("ReplyToId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("RoomId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("SenderRole")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("timestamp with time zone");
@@ -49,6 +75,8 @@ namespace KTU_forum.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ReplyToId");
 
                     b.HasIndex("RoomId");
 
@@ -71,6 +99,9 @@ namespace KTU_forum.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Likes")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -153,6 +184,9 @@ namespace KTU_forum.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Bio")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -170,7 +204,16 @@ namespace KTU_forum.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PasswordResetTokenExpiry")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("ProfilePicturePath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
                         .HasColumnType("text");
 
                     b.Property<string>("Username")
@@ -179,11 +222,37 @@ namespace KTU_forum.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Username")
+                        .IsUnique();
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("KTU_forum.Models.LikeModel", b =>
+                {
+                    b.HasOne("KTU_forum.Models.MessageModel", "Message")
+                        .WithMany("Likes")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KTU_forum.Models.UserModel", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Message");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("KTU_forum.Models.MessageModel", b =>
                 {
+                    b.HasOne("KTU_forum.Models.MessageModel", "ReplyTo")
+                        .WithMany()
+                        .HasForeignKey("ReplyToId");
+
                     b.HasOne("KTU_forum.Models.RoomModel", "Room")
                         .WithMany("Messages")
                         .HasForeignKey("RoomId")
@@ -195,6 +264,8 @@ namespace KTU_forum.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ReplyTo");
 
                     b.Navigation("Room");
 
@@ -236,6 +307,11 @@ namespace KTU_forum.Migrations
                     b.Navigation("Post");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("KTU_forum.Models.MessageModel", b =>
+                {
+                    b.Navigation("Likes");
                 });
 
             modelBuilder.Entity("KTU_forum.Models.PostModel", b =>

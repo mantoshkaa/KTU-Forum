@@ -54,6 +54,7 @@ namespace KTU_forum
                 options.Cookie.HttpOnly = true;  // Helps prevent XSS attacks
                 options.Cookie.IsEssential = true;  // Required for non-logged-in users
             });
+            services.AddSingleton<KTU_forum.Services.OnlineUserService>();
 
         }
 

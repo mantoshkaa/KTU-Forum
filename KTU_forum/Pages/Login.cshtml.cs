@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using BCrypt.Net;
 using KTU_forum.Data;
+using KTU_forum.Services;
 
 namespace KTU_forum.Pages
 {
@@ -15,10 +16,13 @@ namespace KTU_forum.Pages
         private readonly ApplicationDbContext _context; // Use ApplicationDbContext
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(ApplicationDbContext context, ILogger<LoginModel> logger)
+        private readonly OnlineUserService _onlineUserService;
+
+        public LoginModel(ApplicationDbContext context, ILogger<LoginModel> logger, OnlineUserService onlineUserService)
         {
             _context = context;
             _logger = logger;
+            _onlineUserService = onlineUserService;
         }
 
         [BindProperty]
@@ -63,6 +67,9 @@ namespace KTU_forum.Pages
                 // Create session
                 HttpContext.Session.SetString("Username", user.Username);
 
+                // Add user to online users list
+                _onlineUserService.AddUser(user.Username, user.ProfilePicturePath, user.Role);
+
                 // Create a cookie to store authentication information
                 var cookieOptions = new CookieOptions
                 {
@@ -100,8 +107,16 @@ namespace KTU_forum.Pages
 
         public IActionResult OnPostLogout()
         {
+            var username = HttpContext.Session.GetString("Username");
+
             // Clear session data
             HttpContext.Session.Clear();
+
+            // Remove user from online users list if username exists
+            if (!string.IsNullOrEmpty(username))
+            {
+                _onlineUserService.RemoveUser(username);
+            }
 
             // Delete cookies
             Response.Cookies.Delete("Username");

@@ -16,6 +16,43 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet" />
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="css/styles.css" rel="stylesheet" />
+
+    <style>
+        .online-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #28a745;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .online-user-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+        }
+
+        .online-user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+            object-fit: cover;
+        }
+
+        .online-user-name {
+            margin-left: 5px;
+        }
+
+        .online-users-count {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-left: 5px;
+        }
+    </style>
+
+
 </head>
 <body class="d-flex flex-column h-100">
     <!-- For accesing login-->
@@ -28,12 +65,23 @@
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul class="navbar-nav ms-auto mb-2 mb-lg-0 small fw-bolder">
+
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="onlineUsersDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="online-indicator"></span> Online Users
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="onlineUsersDropdown" id="onlineUsersList">
+                                        <li><a class="dropdown-item text-center" href="#">Loading users...</a></li>
+                                    </ul>
+                                </li>
+
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-page="/Rooms">Rooms</a>
                                 </li>
+
                                 @if (HttpContextAccessor.HttpContext.Session.GetString("Username") == null)
                                 {
                                     <li class="nav-item">
@@ -94,5 +142,101 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to fetch online users
+            function fetchOnlineUsers() {
+                fetch('/OnlineUsers')
+                    .then(response => response.json())
+                    .then(data => {
+                        const usersList = document.getElementById('onlineUsersList');
+
+                        // Clear the list
+                        usersList.innerHTML = '';
+
+                        if (data.length === 0) {
+                            // If no users are online
+                            const emptyItem = document.createElement('li');
+                            emptyItem.innerHTML = '<a class="dropdown-item text-center" href="#">No users online</a>';
+                            usersList.appendChild(emptyItem);
+                        } else {
+                            // Add header with count
+                            const headerItem = document.createElement('li');
+                            headerItem.innerHTML = `<div class="dropdown-header">Online Users <span class="online-users-count">(${data.length})</span></div>`;
+                            usersList.appendChild(headerItem);
+
+                            // Add divider
+                            const dividerItem = document.createElement('li');
+                            dividerItem.innerHTML = '<hr class="dropdown-divider">';
+                            usersList.appendChild(dividerItem);
+
+                            // Add each user
+                            data.forEach(user => {
+                                const listItem = document.createElement('li');
+
+                                const userItem = document.createElement('a');
+                                userItem.className = 'dropdown-item online-user-item';
+                                userItem.href = `/PublicProfile/${user.username}`;
+
+                                const indicator = document.createElement('span');
+                                indicator.className = 'online-indicator';
+
+                                const avatar = document.createElement('img');
+                                avatar.className = 'online-user-avatar';
+                                avatar.src = user.profilePicturePath || '/profile-pictures/default.png';
+                                avatar.alt = user.username;
+
+                                const userName = document.createElement('span');
+                                userName.className = 'online-user-name';
+                                userName.textContent = user.username;
+
+                                // Add role badge if user has a role
+                                if (user.role) {
+                                    const roleBadge = document.createElement('span');
+                                    roleBadge.className = 'badge bg-success text-white ms-1';
+                                    roleBadge.style.opacity = '0.4';
+                                    roleBadge.style.fontSize = '0.75rem';
+                                    roleBadge.textContent = user.role;
+                                    userName.appendChild(roleBadge);
+                                }
+
+                                userItem.appendChild(indicator);
+                                userItem.appendChild(avatar);
+                                userItem.appendChild(userName);
+
+                                listItem.appendChild(userItem);
+                                usersList.appendChild(listItem);
+                            });
+                        }
+
+                        // Update dropdown label with count
+                        const dropdownLabel = document.getElementById('onlineUsersDropdown');
+                        dropdownLabel.innerHTML = `<span class="online-indicator"></span> Online Users (${data.length})`;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching online users:', error);
+                    });
+            }
+
+            // Fetch online users on page load
+            fetchOnlineUsers();
+
+            // Fetch online users every 30 seconds
+            setInterval(fetchOnlineUsers, 30000);
+
+            // Update user activity whenever the page is interacted with
+            const updateActivity = function() {
+                fetch('/OnlineUsers', { method: 'GET' });
+            };
+
+            // Monitor user activity
+            const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+            activityEvents.forEach(function(eventName) {
+                document.addEventListener(eventName, updateActivity, { passive: true, once: true });
+            });
+        });
+    </script>
+
         </body>
 </html>
