@@ -387,7 +387,7 @@
         messageItem.appendChild(messageActions);
         messagesList.appendChild(messageItem);
 
-        messagesList.scrollTop = messagesList.scrollHeight;
+        scrollToBottom();
     });
 
     connection.on("ReceiveReply", function (user, message, profilePic, role, messageId, replyToId, originalSender, originalContent) {
@@ -1085,11 +1085,23 @@
             });
     }
 
+
     // Scroll to bottom when page loads
-    window.onload = function () {
-        const messagesList = document.getElementById("messagesList");
-        messagesList.scrollTop = messagesList.scrollHeight;
+    window.addEventListener("load", function () {
+        scrollToBottom();
+    });
+
+    // Function to scroll to the bottom of the messages container
+    function scrollToBottom() {
+        const messagesContainer = document.querySelector(".messages-container");
+        if (messagesContainer) {
+            // Smooth scroll to the bottom of the container
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 100); // Small delay to ensure the DOM updates first
+        }
     }
+
 </script>
 
 <style>
