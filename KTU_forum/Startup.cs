@@ -31,9 +31,9 @@ namespace KTU_forum
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            var connectionString = Configuration.GetConnectionString("Host=dpg-d08auuh5pdvs739kuv5g-a.frankfurt-postgres.render.com;Port=5432;Database=ktu_forum_db_zy1c;Username=ktu_forum_db_zy1c_user;Password=h4JDUo4EvB8iMp0Hivk2V50FMmI1NNAK;SSL Mode=Require;Trust Server Certificate=true");
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(connectionString));
+                options.UseNpgsql("Host=dpg-d08auuh5pdvs739kuv5g-a.frankfurt-postgres.render.com;Port=5432;Database=ktu_forum_db_zy1c;Username=ktu_forum_db_zy1c_user;Password=h4JDUo4EvB8iMp0Hivk2V50FMmI1NNAK;SSL Mode=Require;Trust Server Certificate=true"));
 
 
             services.AddRazorPages();
@@ -82,6 +82,7 @@ namespace KTU_forum
             {
                 endpoints.MapRazorPages();
                 endpoints.MapHub<Hubs.ChatHub>("/chatHub");
+                endpoints.MapHub<Hubs.PrivateMessageHub>("/privateMessageHub");
                 endpoints.MapGet("/KeepAlive", async context =>
                 {
                     context.Session.SetString("KeepAlive", "true");

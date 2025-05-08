@@ -3,6 +3,7 @@ using System;
 using KTU_forum.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace KTU_forum.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250508135133_Add-Migration AddPrivateMessaging")]
+    partial class AddMigrationAddPrivateMessaging
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -161,16 +164,10 @@ namespace KTU_forum.Migrations
                     b.Property<int?>("ConversationModelId")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("IsEdited")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean");
 
                     b.Property<int>("ReceiverId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("ReplyToId")
                         .HasColumnType("integer");
 
                     b.Property<int>("SenderId")
@@ -184,8 +181,6 @@ namespace KTU_forum.Migrations
                     b.HasIndex("ConversationModelId");
 
                     b.HasIndex("ReceiverId");
-
-                    b.HasIndex("ReplyToId");
 
                     b.HasIndex("SenderId");
 
@@ -388,11 +383,6 @@ namespace KTU_forum.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("KTU_forum.Models.PrivateMessageModel", "ReplyTo")
-                        .WithMany()
-                        .HasForeignKey("ReplyToId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("KTU_forum.Models.UserModel", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
@@ -400,8 +390,6 @@ namespace KTU_forum.Migrations
                         .IsRequired();
 
                     b.Navigation("Receiver");
-
-                    b.Navigation("ReplyTo");
 
                     b.Navigation("Sender");
                 });
