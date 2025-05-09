@@ -16,6 +16,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet" />
     <!-- Core theme CSS (includes Bootstrap)-->
     <link href="css/styles.css" rel="stylesheet" />
+    <!-- Add this in the <head> section of _Layout.cshtml -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.6/signalr.min.js"></script>
 
     <style>
         .online-indicator {
@@ -238,5 +240,916 @@
         });
     </script>
 
-        </body>
+    <!-- Private Messaging UI -->
+    @if (HttpContextAccessor.HttpContext.Session.GetString("Username") != null)
+    {
+        <div id="privateMessagesContainer" class="private-messages-container">
+            <button id="privateMessagesToggle" class="private-messages-toggle">
+                <i class="bi bi-chat-dots-fill"></i>
+                <span id="unreadBadge" class="unread-badge d-none">0</span>
+            </button>
+
+            <div id="privateMessagesPanel" class="private-messages-panel d-none">
+                <div class="pm-header">
+                    <h5>Private Messages</h5>
+                    <button type="button" class="btn btn-sm" id="pmCloseBtn"><i class="bi bi-x"></i></button>
+                </div>
+
+                <div class="pm-tabs">
+                    <button type="button" class="pm-tab active" data-tab="conversations">Conversations</button>
+                    <button type="button" class="pm-tab" data-tab="new-message">New Message</button>
+                </div>
+
+                <div class="pm-tab-content" id="conversations-tab">
+                    <div class="conversation-list" id="conversationList">
+                        <!-- Conversations will be loaded here -->
+                        <div class="text-center p-3 text-muted">
+                            <small>Loading conversations...</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pm-tab-content d-none" id="new-message-tab">
+                    <div class="new-message-form">
+                        <div class="form-group mb-3">
+                            <label for="receiverUsername">Send to:</label>
+                            <input type="text" id="receiverUsername" class="form-control" placeholder="Username">
+                        </div>
+                        <div class="form-group mb-3">
+                            <textarea id="newPrivateMessageContent" class="form-control" rows="3" placeholder="Type your message..."></textarea>
+                        </div>
+                        <button type="button" id="sendNewPrivateMessage" class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+
+                <div class="pm-chat d-none" id="privateChatArea">
+                    <div class="pm-chat-header">
+                        <button type="button" class="btn btn-sm" id="backToConversations"><i class="bi bi-arrow-left"></i></button>
+                        <span id="chatRecipientName">Username</span>
+                    </div>
+                    <div class="pm-chat-messages" id="privateChatMessages">
+                        <!-- Chat messages will appear here -->
+                    </div>
+                    <div class="pm-chat-input">
+                        <div class="input-group">
+                            <textarea id="privateMessageInput" class="form-control" placeholder="Type your message..."></textarea>
+                            <button type="button" id="sendPrivateMessage" class="btn btn-primary">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add this to your <style> section in the head -->
+        <style>
+            /* Private Messaging Styles - Fixed version */
+            .private-messages-container {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 1000;
+            }
+
+            .private-messages-toggle {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                cursor: pointer;
+            }
+
+                .private-messages-toggle i {
+                    font-size: 1.5rem;
+                }
+
+            .unread-badge {
+                position: absolute;
+                top: -5px;
+                right: -5px;
+                background-color: #dc3545;
+                color: white;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                font-size: 0.75rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .private-messages-panel {
+                position: fixed;
+                bottom: 80px;
+                right: 20px;
+                width: 320px;
+                height: 480px;
+                background-color: white;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+
+            .pm-header {
+                padding: 10px 15px;
+                background-color: #f8f9fa;
+                border-bottom: 1px solid #dee2e6;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-shrink: 0; /* Prevent header from shrinking */
+            }
+
+                .pm-header h5 {
+                    margin: 0;
+                }
+
+            .pm-tabs {
+                display: flex;
+                border-bottom: 1px solid #dee2e6;
+                flex-shrink: 0; /* Prevent tabs from shrinking */
+            }
+
+            .pm-tab {
+                flex: 1;
+                padding: 10px;
+                background: none;
+                border: none;
+                border-bottom: 2px solid transparent;
+                cursor: pointer;
+            }
+
+                .pm-tab.active {
+                    border-bottom-color: #007bff;
+                    font-weight: bold;
+                }
+
+            .pm-tab-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                height: calc(100% - 100px); /* Adjust based on header + tabs height */
+            }
+
+            .conversation-list {
+                overflow-y: auto;
+                flex: 1;
+            }
+
+            .conversation-item {
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+            }
+
+                .conversation-item:hover {
+                    background-color: #f8f9fa;
+                }
+
+            .conversation-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                margin-right: 10px;
+                object-fit: cover;
+            }
+
+            .conversation-info {
+                flex: 1;
+                min-width: 0; /* This allows text-overflow to work properly */
+            }
+
+            .conversation-name {
+                font-weight: bold;
+                margin-bottom: 2px;
+            }
+
+            .conversation-preview {
+                font-size: 0.8rem;
+                color: #6c757d;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 190px;
+            }
+
+            .conversation-meta {
+                text-align: right;
+                min-width: 50px;
+            }
+
+            .conversation-time {
+                font-size: 0.7rem;
+                color: #6c757d;
+            }
+
+            .conversation-unread {
+                display: inline-block;
+                background-color: #dc3545;
+                color: white;
+                border-radius: 50%;
+                width: 18px;
+                height: 18px;
+                font-size: 0.7rem;
+                text-align: center;
+                line-height: 18px;
+                margin-top: 3px;
+            }
+
+            .pm-chat {
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: white;
+            }
+
+            .pm-chat-header {
+                padding: 10px 15px;
+                background-color: #f8f9fa;
+                border-bottom: 1px solid #dee2e6;
+                display: flex;
+                align-items: center;
+                flex-shrink: 0; /* Prevent header from shrinking */
+            }
+
+                .pm-chat-header button {
+                    margin-right: 10px;
+                }
+
+            .pm-chat-messages {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .pm-message {
+                margin-bottom: 10px;
+                max-width: 80%;
+                padding: 8px 12px;
+                border-radius: 15px;
+                position: relative;
+                word-wrap: break-word; /* Allow long words to break */
+            }
+
+            .pm-message-sent {
+                align-self: flex-end;
+                background-color: #007bff;
+                color: white;
+            }
+
+            .pm-message-received {
+                align-self: flex-start;
+                background-color: #e9ecef;
+                color: #212529;
+            }
+
+            .pm-message-time {
+                font-size: 0.7rem;
+                margin-top: 2px;
+                text-align: right;
+            }
+
+            .pm-message-sent .pm-message-time {
+                color: rgba(255, 255, 255, 0.7);
+            }
+
+            .pm-message-received .pm-message-time {
+                color: #6c757d;
+            }
+
+            .pm-message-reply {
+                font-size: 0.8rem;
+                padding: 4px 8px;
+                background-color: rgba(0,0,0,0.1);
+                border-radius: 5px;
+                margin-bottom: 5px;
+            }
+
+            .pm-chat-input {
+                padding: 10px;
+                border-top: 1px solid #dee2e6;
+                flex-shrink: 0; /* Prevent from shrinking */
+                background: white; /* Ensure it's visible */
+                position: relative; /* Ensure it stays at the bottom */
+                z-index: 10; /* Keep on top */
+            }
+
+                .pm-chat-input .input-group {
+                    display: flex;
+                    align-items: stretch;
+                }
+
+                .pm-chat-input textarea {
+                    resize: none;
+                    height: 38px;
+                    min-height: 38px; /* Enforce minimum height */
+                    max-height: 100px;
+                    overflow-y: auto;
+                    flex: 1;
+                }
+
+                .pm-chat-input button {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                /* For mobile responsiveness */
+                @@media (max-width: 576px) {
+                    .private-messages-panel
+
+                {
+                    width: 100%;
+                    height: 100%;
+                    bottom: 0;
+                    right: 0;
+                    border-radius: 0;
+                }
+
+                .pm-message {
+                    max-width: 90%;
+                }
+
+                }
+        </style>
+
+        <!-- Add SignalR client script -->
+        <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+        <!-- Private Messaging JavaScript -->
+        <script>
+            // Run after the document is ready
+            document.addEventListener('DOMContentLoaded', function() {
+                // Only initialize if user is logged in
+                const currentUsername = '@HttpContextAccessor.HttpContext.Session.GetString("Username")';
+                if (!currentUsername) return;
+
+                // Initialize variables
+                let connection;
+                let activeConversationId = null;
+                let activeRecipientUsername = null;
+                let totalUnreadMessages = 0;
+                let conversationsData = {};
+
+                // DOM elements
+                const privateMessagesToggle = document.getElementById('privateMessagesToggle');
+                const privateMessagesPanel = document.getElementById('privateMessagesPanel');
+                const pmCloseBtn = document.getElementById('pmCloseBtn');
+                const unreadBadge = document.getElementById('unreadBadge');
+                const tabs = document.querySelectorAll('.pm-tab');
+                const tabContents = document.querySelectorAll('.pm-tab-content');
+                const conversationsTab = document.getElementById('conversations-tab');
+                const newMessageTab = document.getElementById('new-message-tab');
+                const conversationList = document.getElementById('conversationList');
+                const receiverUsername = document.getElementById('receiverUsername');
+                const newPrivateMessageContent = document.getElementById('newPrivateMessageContent');
+                const sendNewPrivateMessage = document.getElementById('sendNewPrivateMessage');
+                const privateChatArea = document.getElementById('privateChatArea');
+                const backToConversations = document.getElementById('backToConversations');
+                const chatRecipientName = document.getElementById('chatRecipientName');
+                const privateChatMessages = document.getElementById('privateChatMessages');
+                const privateMessageInput = document.getElementById('privateMessageInput');
+                const sendPrivateMessage = document.getElementById('sendPrivateMessage');
+
+                if (privateMessageInput) {
+                    privateMessageInput.addEventListener('input', function() {
+                        autoResizeTextarea(this);
+                    });
+                }
+
+                if (newPrivateMessageContent) {
+                    newPrivateMessageContent.addEventListener('input', function() {
+                        autoResizeTextarea(this);
+                    });
+                }
+
+                // Ensure scrolling works correctly in message area
+                if (privateChatMessages) {
+                    privateChatMessages.addEventListener('DOMNodeInserted', function() {
+                        // Scroll to bottom when new content is added
+                        this.scrollTop = this.scrollHeight;
+                    });
+                }
+
+                if (sendPrivateMessage && privateMessageInput) {
+                    sendPrivateMessage.addEventListener('click', function() {
+                        // Set focus back to input after sending
+                        setTimeout(() => {
+                            privateMessageInput.focus();
+                        }, 100);
+                    });
+                }
+
+                // Connect to SignalR hub
+                function connectToSignalR() {
+                    connection = new signalR.HubConnectionBuilder()
+                        .withUrl("/chatHub")
+                        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // More robust reconnection strategy
+                        .configureLogging(signalR.LogLevel.Information) // Add logging for debugging
+                        .build();
+
+                    // Handle reconnection
+                    connection.onreconnected(() => {
+                        console.log("Reconnected to SignalR hub");
+                        // Rejoin active conversation if any
+                        if (activeConversationId) {
+                            loadConversation(activeConversationId, activeRecipientUsername);
+                        }
+                        loadUserConversations(); // Reload conversations on reconnect
+                    });
+
+                    // Handle disconnection
+                    connection.onclose((error) => {
+                        console.log("Disconnected from SignalR hub", error);
+                        // Try to reconnect after a delay
+                        setTimeout(() => {
+                            connectToSignalR();
+                        }, 5000);
+                    });
+
+                    // Event handlers
+                    connection.on("UserConversationsLoaded", handleUserConversationsLoaded);
+                    connection.on("ConversationLoaded", handleConversationLoaded);
+                    connection.on("ReceivePrivateMessage", handleReceivePrivateMessage);
+                    connection.on("NewPrivateMessage", handleNewPrivateMessage);
+                    connection.on("PrivateMessagesRead", handlePrivateMessagesRead);
+                    connection.on("PrivateMessageLiked", handlePrivateMessageLiked);
+                    connection.on("PrivateMessageEdited", handlePrivateMessageEdited);
+                    connection.on("PrivateMessageDeleted", handlePrivateMessageDeleted);
+                    connection.on("ErrorMessage", handleErrorMessage);
+
+                    // Start the connection
+                    console.log("Attempting to connect to SignalR hub...");
+                    connection.start()
+                        .then(() => {
+                            console.log("Connected to SignalR hub");
+                            // Load user conversations when connected
+                            loadUserConversations();
+                        })
+                        .catch(err => {
+                            console.error("Error connecting to SignalR hub:", err);
+                            // Try to reconnect after a delay
+                            setTimeout(connectToSignalR, 5000);
+                        });
+                }
+
+                // Toggle private messages panel
+                privateMessagesToggle.addEventListener('click', function() {
+                    privateMessagesPanel.classList.toggle('d-none');
+                    if (!privateMessagesPanel.classList.contains('d-none')) {
+                        loadUserConversations();
+                        updateUnreadBadge(0); // Reset badge when opening panel
+                    }
+                });
+
+                // Close private messages panel
+                pmCloseBtn.addEventListener('click', function() {
+                    privateMessagesPanel.classList.add('d-none');
+                });
+
+                // Tab switching
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // Remove active class from all tabs
+                        tabs.forEach(t => t.classList.remove('active'));
+
+                        // Add active class to clicked tab
+                        this.classList.add('active');
+
+                        // Hide all tab contents
+                        tabContents.forEach(content => content.classList.add('d-none'));
+
+                        // Show content for active tab
+                        const tabName = this.getAttribute('data-tab');
+                        document.getElementById(tabName + '-tab').classList.remove('d-none');
+
+                        // Hide chat area when switching tabs
+                        privateChatArea.classList.add('d-none');
+                    });
+                });
+
+                // Back to conversations button
+                backToConversations.addEventListener('click', function() {
+                    privateChatArea.classList.add('d-none');
+                    conversationsTab.classList.remove('d-none');
+                    tabs[0].classList.add('active');
+                    tabs[1].classList.remove('active');
+                    activeConversationId = null;
+                    activeRecipientUsername = null;
+                });
+
+                // Send new private message
+                sendNewPrivateMessage.addEventListener('click', function() {
+                    const recipient = receiverUsername.value.trim();
+                    const message = newPrivateMessageContent.value.trim();
+
+                    if (!recipient || !message) {
+                        alert("Please enter both recipient username and message.");
+                        return;
+                    }
+
+                    sendPrivateMessageToUser(recipient, message);
+
+                    // Clear form
+                    receiverUsername.value = '';
+                    newPrivateMessageContent.value = '';
+
+                    // Switch to conversations tab
+                    tabs[0].click();
+                });
+
+                // Send private message in chat
+                sendPrivateMessage.addEventListener('click', function() {
+                    sendMessageInActiveChat();
+                });
+
+                // Send on Enter key, but allow Shift+Enter for new line
+                privateMessageInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessageInActiveChat();
+                    }
+                });
+
+                // Send message in active chat
+                function sendMessageInActiveChat() {
+                    const message = privateMessageInput.value.trim();
+                    if (!message || !activeRecipientUsername) return;
+
+                    sendPrivateMessageToUser(activeRecipientUsername, message);
+                    privateMessageInput.value = '';
+                }
+
+                // Send private message to user
+                function sendPrivateMessageToUser(recipient, message, replyToId = null) {
+                    if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                        connection.invoke("SendPrivateMessage", currentUsername, recipient, message, replyToId)
+                            .catch(err => console.error("Error sending private message:", err));
+                    } else {
+                        console.error("Cannot send message - not connected to SignalR");
+                        alert("Cannot send message. Please try again later.");
+                    }
+                }
+
+                // Load user conversations
+                function loadUserConversations() {
+                    if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                        conversationList.innerHTML = '<div class="text-center p-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
+                        connection.invoke("GetUserConversations", currentUsername)
+                            .catch(err => console.error("Error loading conversations:", err));
+                    }
+                }
+
+                // Load a specific conversation
+                function loadConversation(conversationId, recipientUsername) {
+                    if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+
+                    activeConversationId = conversationId;
+                    activeRecipientUsername = recipientUsername;
+
+                    // Update UI
+                    chatRecipientName.textContent = recipientUsername;
+                    privateChatMessages.innerHTML = '<div class="text-center p-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
+
+                    // Hide tabs content and show chat area
+                    tabContents.forEach(content => content.classList.add('d-none'));
+                    privateChatArea.classList.remove('d-none');
+
+                    // Get conversation
+                    connection.invoke("GetOrCreateConversation", currentUsername, recipientUsername)
+                        .catch(err => console.error("Error loading conversation:", err));
+                }
+
+                // Mark messages as read
+                function markMessagesAsRead(conversationId) {
+                    if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
+
+                    connection.invoke("MarkPrivateMessagesAsRead", currentUsername, conversationId)
+                        .catch(err => console.error("Error marking messages as read:", err));
+                }
+
+                // Handle conversations loaded
+                function handleUserConversationsLoaded(conversations) {
+                    conversationsData = {}; // Reset stored data
+                    let unreadCount = 0;
+
+                    if (conversations.length === 0) {
+                        conversationList.innerHTML = '<div class="text-center p-3 text-muted"><small>No conversations yet</small></div>';
+                        return;
+                    }
+
+                    let html = '';
+                    conversations.forEach(conv => {
+                        // Store conversation data for later use
+                        conversationsData[conv.conversationId] = conv;
+
+                        // Add to unread count
+                        unreadCount += conv.unreadCount;
+
+                        // Format time
+                        const messageTime = new Date(conv.lastMessageTime);
+                        const now = new Date();
+                        let timeStr;
+
+                        if (messageTime.toDateString() === now.toDateString()) {
+                            // Today - show time
+                            timeStr = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        } else if (messageTime.getFullYear() === now.getFullYear()) {
+                            // This year - show month and day
+                            timeStr = messageTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                        } else {
+                            // Different year - show date with year
+                            timeStr = messageTime.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+                        }
+
+                        html += `
+                        <div class="conversation-item" data-id="${conv.conversationId}" data-username="${conv.username}">
+                            <img src="${conv.profilePicture}" alt="${conv.username}" class="conversation-avatar">
+                            <div class="conversation-info">
+                                <div class="conversation-name">${conv.username}</div>
+                                <div class="conversation-preview">${conv.lastMessage || 'No messages yet'}</div>
+                            </div>
+                            <div class="conversation-meta">
+                                <div class="conversation-time">${timeStr}</div>
+                                ${conv.unreadCount > 0 ? `<div class="conversation-unread">${conv.unreadCount}</div>` : ''}
+                            </div>
+                        </div>
+                        `;
+                    });
+
+                    conversationList.innerHTML = html;
+
+                    // Add click event to conversation items
+                    document.querySelectorAll('.conversation-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            const convId = parseInt(this.getAttribute('data-id'));
+                            const username = this.getAttribute('data-username');
+                            loadConversation(convId, username);
+                        });
+                    });
+
+                    // Update unread badge
+                    updateUnreadBadge(unreadCount);
+                }
+
+                // Handle conversation loaded
+                function handleConversationLoaded(conversationId, recipientUsername, recipientProfilePic, messages) {
+                    // Update UI
+                    chatRecipientName.textContent = recipientUsername;
+                    let html = '';
+
+                    if (messages.length === 0) {
+                        html = '<div class="text-center p-3 text-muted"><small>No messages yet. Start the conversation!</small></div>';
+                    } else {
+                        let lastDate = null;
+
+                        messages.forEach(msg => {
+                            // Check if we need to add a date separator
+                            const msgDate = new Date(msg.sentAt);
+                            const msgDateStr = msgDate.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+
+                            if (lastDate !== msgDateStr) {
+                                html += `<div class="text-center my-3"><small class="bg-light px-2 py-1 rounded">${msgDateStr}</small></div>`;
+                                lastDate = msgDateStr;
+                            }
+
+                            // Format time
+                            const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                            // Determine message class
+                            const messageClass = msg.isFromCurrentUser ? 'pm-message-sent' : 'pm-message-received';
+
+                            // Add reply info if this is a reply
+                            let replyHtml = '';
+                            if (msg.replyToId) {
+                                replyHtml = `
+                                <div class="pm-message-reply">
+                                    <small><strong>${msg.replyToSenderName}:</strong> ${truncateText(msg.replyToContent, 50)}</small>
+                                </div>
+                                `;
+                            }
+
+                            // Add edited indicator if message was edited
+                            const editedHtml = msg.isEdited ? ' <small><i>(edited)</i></small>' : '';
+
+                            // Add likes indicator if has likes
+                            const likesHtml = msg.likesCount > 0 ? `<small class="ms-2"><i class="bi bi-heart-fill text-danger"></i> ${msg.likesCount}</small>` : '';
+
+                            html += `
+                            <div class="pm-message ${messageClass}" data-id="${msg.id}">
+                                ${replyHtml}
+                                ${msg.content}${editedHtml}
+                                <div class="pm-message-time">${timeStr}${likesHtml}</div>
+                            </div>
+                            `;
+                        });
+                    }
+
+                    privateChatMessages.innerHTML = html;
+                    privateChatMessages.scrollTop = privateChatMessages.scrollHeight;
+
+                    // Mark messages as read
+                    markMessagesAsRead(conversationId);
+
+                    setTimeout(() => {
+                        privateMessageInput.focus();
+                    }, 100);
+                }
+
+                // Handle receive private message
+                function handleReceivePrivateMessage(conversationId, otherUsername, isFromCurrentUser, message) {
+                    // If this is for the active conversation, add it to the chat
+                    if (activeConversationId === conversationId) {
+                        const msgDate = new Date(message.sentAt);
+                        const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const messageClass = isFromCurrentUser ? 'pm-message-sent' : 'pm-message-received';
+
+                        // Add reply info if this is a reply
+                        let replyHtml = '';
+                        if (message.replyToId) {
+                            replyHtml = `
+                            <div class="pm-message-reply">
+                                <small><strong>${message.replyToSenderName}:</strong> ${truncateText(message.replyToContent, 50)}</small>
+                            </div>
+                            `;
+                        }
+
+                        // Check if we need a date separator
+                        const msgDateStr = msgDate.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+                        const lastDateEl = privateChatMessages.querySelector('.text-center small.bg-light');
+                        const lastDateStr = lastDateEl ? lastDateEl.textContent : null;
+
+                        let dateHtml = '';
+                        if (lastDateStr !== msgDateStr) {
+                            dateHtml = `<div class="text-center my-3"><small class="bg-light px-2 py-1 rounded">${msgDateStr}</small></div>`;
+                        }
+
+                        // Add the message
+                        const msgHtml = `
+                        ${dateHtml}
+                        <div class="pm-message ${messageClass}" data-id="${message.id}">
+                            ${replyHtml}
+                            ${message.content}
+                            <div class="pm-message-time">${timeStr}</div>
+                        </div>
+                        `;
+
+                        // Remove "no messages" notice if present
+                        const noMessagesEl = privateChatMessages.querySelector('.text-center.p-3.text-muted');
+                        if (noMessagesEl) {
+                            privateChatMessages.innerHTML = '';
+                        }
+
+                        privateChatMessages.insertAdjacentHTML('beforeend', msgHtml);
+                        privateChatMessages.scrollTop = privateChatMessages.scrollHeight;
+
+                        // Mark as read if we're the receiver
+                        if (!isFromCurrentUser) {
+                            markMessagesAsRead(conversationId);
+                        }
+                    }
+
+                    // Refresh conversations list to show the latest message
+                    loadUserConversations();
+                }
+
+                // Handle new private message notification
+                function handleNewPrivateMessage(conversationId, senderUsername, senderProfilePic, messageContent) {
+                    // Don't show notification if we're already in this conversation
+                    if (activeConversationId === conversationId) return;
+
+                    // Play notification sound (if you want to add this feature)
+                    // playNotificationSound();
+
+                    // Refresh conversations to update list with latest message
+                    loadUserConversations();
+                }
+
+                // Handle messages read notification
+                function handlePrivateMessagesRead(conversationId) {
+                    // Update UI if needed - mark sent messages as read
+                    if (activeConversationId === conversationId) {
+                        // You could update the UI to show "read" status
+                    }
+                }
+
+                // Handle message liked
+                function handlePrivateMessageLiked(messageId, likeCount) {
+                    // Update like count on message
+                    const messageEl = privateChatMessages.querySelector(`.pm-message[data-id="${messageId}"] .pm-message-time`);
+                    if (messageEl) {
+                        // Check if like indicator already exists
+                        const likeEl = messageEl.querySelector('.bi-heart-fill');
+                        if (likeEl) {
+                            // Update existing likes
+                            likeEl.parentNode.innerHTML = `<i class="bi bi-heart-fill text-danger"></i> ${likeCount}`;
+                        } else {
+                            // Add likes indicator
+                            messageEl.insertAdjacentHTML('beforeend', ` <small class="ms-2"><i class="bi bi-heart-fill text-danger"></i> ${likeCount}</small>`);
+                        }
+                    }
+                }
+
+                // Handle message edited
+                function handlePrivateMessageEdited(messageId, newContent) {
+                    // Update message content
+                    const messageEl = privateChatMessages.querySelector(`.pm-message[data-id="${messageId}"]`);
+                    if (messageEl) {
+                        // Get the reply part if it exists
+                        const replyEl = messageEl.querySelector('.pm-message-reply');
+                        const replyHtml = replyEl ? replyEl.outerHTML : '';
+
+                        // Get the time part
+                        const timeEl = messageEl.querySelector('.pm-message-time');
+                        const timeHtml = timeEl ? timeEl.outerHTML : '';
+
+                        // Update content preserving reply and time
+                        messageEl.innerHTML = `${replyHtml}${newContent} <small><i>(edited)</i></small>${timeHtml}`;
+                    }
+                }
+
+                // Handle message deleted
+                function handlePrivateMessageDeleted(messageId) {
+                    // Remove message from UI
+                    const messageEl = privateChatMessages.querySelector(`.pm-message[data-id="${messageId}"]`);
+                    if (messageEl) {
+                        messageEl.remove();
+                    }
+                }
+
+                // Handle error messages
+                function handleErrorMessage(message) {
+                    alert(message); // Simple error handling
+                }
+
+                // Update the unread badge
+                function updateUnreadBadge(count) {
+                    totalUnreadMessages = count;
+
+                    if (count > 0) {
+                        unreadBadge.textContent = count > 99 ? '99+' : count;
+                        unreadBadge.classList.remove('d-none');
+                    } else {
+                        unreadBadge.classList.add('d-none');
+                    }
+                }
+
+                // Helper function to truncate text
+                function truncateText(text, maxLength) {
+                    if (!text) return '';
+                    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+                }
+
+                // Function to check if an element is in viewport
+                function isElementInViewport(el) {
+                    const rect = el.getBoundingClientRect();
+                    return (
+                        rect.top >= 0 &&
+                        rect.left >= 0 &&
+                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                    );
+                }
+
+                // Auto-resize textarea based on content
+                function autoResizeTextarea(textarea) {
+                    // Reset height to minimum to accurately calculate required height
+                    textarea.style.height = '38px';
+
+                    // Set the height based on scroll height (content)
+                    const newHeight = Math.min(100, Math.max(38, textarea.scrollHeight));
+                    textarea.style.height = newHeight + 'px';
+                }
+
+
+
+
+                // Initialize the connection
+                connectToSignalR();
+            });
+        </script>
+    }
+
+</body>
 </html>

@@ -1,21 +1,15 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.InMemory;
-using KTU_forum.Models;
-using Microsoft.Extensions.FileProviders;
-using System.IO;
 using KTU_forum.Data;
-using Microsoft.AspNetCore.Http;
+using KTU_forum.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace KTU_forum
 {
@@ -31,14 +25,29 @@ namespace KTU_forum
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(connectionString));
-
+                options.UseNpgsql("DefaultConnection"));
 
             services.AddRazorPages();
-            services.AddSignalR(); // Add SignalR services
-            services.AddControllersWithViews(); // Or add your services like MVC
+
+
+
+            // Configure SignalR with user identification
+
+            services.AddSignalR(options => {
+                options.EnableDetailedErrors = true; // Enable detailed errors for debugging
+                options.MaximumReceiveMessageSize = 102400; // Optional: increase message size limit if needed
+            });
+
+
+
+            // Add the custom user ID provider for SignalR
+
+            services.AddSingleton<IUserIdProvider, NameUserIdProvider>();
+
+
+
+            services.AddControllersWithViews();
 
             services.AddRazorPages(options =>
             {
@@ -46,7 +55,6 @@ namespace KTU_forum
                 options.Conventions.AddPageRoute("/PublicProfile", "/Profile/{username}");
             });
 
-            services.AddRazorPages();
             services.AddHttpContextAccessor();
             services.AddSession(options =>
             {
@@ -54,8 +62,10 @@ namespace KTU_forum
                 options.Cookie.HttpOnly = true;  // Helps prevent XSS attacks
                 options.Cookie.IsEssential = true;  // Required for non-logged-in users
             });
-            services.AddSingleton<KTU_forum.Services.OnlineUserService>();
 
+
+
+            services.AddSingleton<KTU_forum.Services.OnlineUserService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -72,16 +82,25 @@ namespace KTU_forum
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles(); // Single static files configuration
+            app.UseStaticFiles();
 
             app.UseRouting();
+
+
+
+            // Important: Session middleware must be called before SignalR endpoints
+
             app.UseSession();
-            app.UseAuthorization(); // Should be after UseRouting but before UseEndpoints
+
+
+
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
                 endpoints.MapHub<Hubs.ChatHub>("/chatHub");
+                endpoints.MapControllers(); // Map controllers for API endpoints
                 endpoints.MapGet("/KeepAlive", async context =>
                 {
                     context.Session.SetString("KeepAlive", "true");

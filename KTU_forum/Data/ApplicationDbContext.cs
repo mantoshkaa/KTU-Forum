@@ -14,6 +14,8 @@ namespace KTU_forum.Data
         public DbSet<MessageModel> Messages { get; set; }
         public DbSet<RoomModel> Rooms { get; set; }
         public DbSet<LikeModel> Likes { get; set; }
+        public DbSet<PrivateMessageModel> PrivateMessages { get; set; }
+        public DbSet<ConversationModel> Conversations { get; set; }
 
         // just for clarity control, since there are multiple relationships related to replies and messages
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -59,6 +61,45 @@ namespace KTU_forum.Data
                 .HasOne(l => l.User)
                 .WithMany()  // No need for a navigation property on UserModel
                 .HasForeignKey(l => l.UserId);
+
+            // Configure PrivateMessage relationships
+            modelBuilder.Entity<PrivateMessageModel>()
+                .HasOne(pm => pm.Sender)
+                .WithMany()
+                .HasForeignKey(pm => pm.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PrivateMessageModel>()
+                .HasOne(pm => pm.Receiver)
+                .WithMany()
+                .HasForeignKey(pm => pm.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PrivateMessageModel>()
+                .HasOne(pm => pm.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(pm => pm.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure self-referencing reply relationship
+            modelBuilder.Entity<PrivateMessageModel>()
+                .HasOne(pm => pm.ReplyTo)
+                .WithMany()
+                .HasForeignKey(pm => pm.ReplyToId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure ConversationModel relationships
+            modelBuilder.Entity<ConversationModel>()
+                .HasOne(c => c.User1)
+                .WithMany()
+                .HasForeignKey(c => c.User1Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ConversationModel>()
+                .HasOne(c => c.User2)
+                .WithMany()
+                .HasForeignKey(c => c.User2Id)
+                .OnDelete(DeleteBehavior.Restrict);
 
         }
 
