@@ -26,7 +26,7 @@ namespace KTU_forum
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql("DefaultConnection"));
+                options.UseNpgsql("Host=dpg-d08auuh5pdvs739kuv5g-a.frankfurt-postgres.render.com;Port=5432;Username=ktu_forum_db_zy1c_user;Password=h4JDUo4EvB8iMp0Hivk2V50FMmI1NNAK;Database=ktu_forum_db_zy1c;SSL Mode=Require;Trust Server Certificate=true"));
 
             services.AddRazorPages();
 
