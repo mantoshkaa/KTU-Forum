@@ -3,9 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace KTU_forum
 {
@@ -22,12 +19,11 @@ namespace KTU_forum
                 {
                     webBuilder.UseStartup<Startup>();
                 })
-            .ConfigureLogging(logging =>
-            {
-                logging.ClearProviders(); // Clears existing loggers
-                logging.AddConsole();     // Adds console logger
-                logging.AddDebug();       // Adds debug logger (optional)
-            });
-
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.AddConsole();
+                    logging.AddDebug();
+                });
     }
 }
