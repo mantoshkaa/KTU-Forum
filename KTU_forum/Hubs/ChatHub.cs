@@ -14,13 +14,15 @@ namespace KTU_forum.Hubs
     {
         private readonly ApplicationDbContext _dbContext;
 
+
         public ChatHub(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public async Task SendMessage(string username, string roomName, string message, string role = null)
+        public async Task SendMessage(string username, string roomName, string message, string role = null, string imagePath = null)
         {
+
             try
             {
                 // Find the user by username
@@ -46,22 +48,46 @@ namespace KTU_forum.Hubs
                     role = user.Role;
                 }
 
-                // Create and save message to database with userId and roomId
                 var newMessage = new MessageModel
                 {
                     UserId = user.Id,
                     RoomId = room.Id,
-                    Content = message,
-                    SentAt = DateTime.UtcNow,
-                    SenderRole = role,
-                    Likes = new List<LikeModel>() // Initialize empty likes collection
                 };
+
+                if (imagePath == null)
+                {
+                    // Create and save message to database with userId and roomId
+                    newMessage = new MessageModel
+                    {
+                        UserId = user.Id,
+                        RoomId = room.Id,
+                        Content = message,
+                        SentAt = DateTime.UtcNow,
+                        SenderRole = role,
+                        Likes = new List<LikeModel>() // Initialize empty likes collection
+                    };
+                }
+                else
+                {
+                    // Create and save message to database with userId and roomId and image
+                    newMessage = new MessageModel
+                    {
+                        UserId = user.Id,
+                        RoomId = room.Id,
+                        Content = message,
+                        SentAt = DateTime.UtcNow,
+                        SenderRole = role,
+                        ImagePath = imagePath,
+                        Likes = new List<LikeModel>() // Initialize empty likes collection
+                    };
+                }
+                
 
                 _dbContext.Messages.Add(newMessage);
                 await _dbContext.SaveChangesAsync();
 
                 // Broadcast the message to all clients in that room
-                await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message, user.ProfilePicturePath ?? "/profile-pictures/default.png", role);
+                await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message, user.ProfilePicturePath ?? "/profile-pictures/default.png", role, imagePath);
 
                 // Also send the new message ID back to the client
                 await Clients.Caller.SendAsync("MessageSent", newMessage.Id);

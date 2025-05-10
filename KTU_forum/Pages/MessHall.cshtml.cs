@@ -25,6 +25,7 @@ namespace KTU_forum.Pages
             public string SenderUsername { get; set; }
             public string SenderProfilePic { get; set; }
             public string SenderRole { get; set; }
+            public string ImagePath { get; set ; }
             public int LikesCount { get; set; }
             public bool IsReply { get; set; }
             public int? ReplyToId { get; set; }

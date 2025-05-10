@@ -139,7 +139,7 @@
             </div>
             <!-- Message Input Area -->
             <div class="message-input-area mt-3">
-                <!-- Reply info box (hidden by default) -->
+                <!-- Reply info box -->
                 <div id="replyContainer" class="reply-container bg-light p-2 mb-2 rounded d-none">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
@@ -151,14 +151,19 @@
                         </button>
                     </div>
                 </div>
-                <div class="d-flex">
+
+                <!-- Input Area -->
+                <div class="d-flex align-items-center">
+                    <!-- Image Upload Button -->
+                    <label id="imageLabel" class="btn btn-secondary me-2 mb-0">
+                        <i class="bi bi-image"></i> Select Image
+                        <input type="file" id="imageInput" accept="image/*" hidden />
+                    </label>
+
                     <input type="text" id="messageInput" class="form-control me-2" placeholder="Enter your message" />
                     <button id="sendButton" class="btn btn-primary">Send</button>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
 <!-- SignalR JS Script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.10/signalr.min.js"></script>
@@ -1101,6 +1106,20 @@
             }, 100); // Small delay to ensure the DOM updates first
         }
     }
+
+
+                const imageInput = document.getElementById("imageInput");
+                   const imageLabel = document.getElementById("imageLabel");
+
+                   imageInput.addEventListener("change", function () {
+                       if (this.files && this.files.length > 0) {
+                           imageLabel.classList.remove("btn-secondary");
+                           imageLabel.classList.add("btn-primary");
+                       } else {
+                           imageLabel.classList.remove("btn-primary");
+                           imageLabel.classList.add("btn-secondary");
+                       }
+                   });
 
 </script>
 
