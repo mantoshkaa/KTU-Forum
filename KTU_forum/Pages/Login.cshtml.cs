@@ -94,7 +94,10 @@ namespace KTU_forum.Pages
 
                 // Log successful login attempt
                 _logger.LogInformation($"User {Username} logged in successfully.");
-                return RedirectToPage("/Rooms");
+
+                ReturnUrl ??= "/";
+                return LocalRedirect(ReturnUrl);
+
             }
 
             // Log failed login attempt
