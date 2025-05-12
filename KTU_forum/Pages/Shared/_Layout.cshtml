@@ -374,9 +374,9 @@
                 flex-shrink: 0; /* Prevent header from shrinking */
             }
 
-            .pm-header h5 {
-                margin: 0;
-            }
+                .pm-header h5 {
+                    margin: 0;
+                }
 
             .pm-tabs {
                 display: flex;
@@ -393,10 +393,10 @@
                 cursor: pointer;
             }
 
-            .pm-tab.active {
-                border-bottom-color: #007bff;
-                font-weight: bold;
-            }
+                .pm-tab.active {
+                    border-bottom-color: #007bff;
+                    font-weight: bold;
+                }
 
             .pm-tab-content {
                 flex: 1;
@@ -420,9 +420,9 @@
                 cursor: pointer;
             }
 
-            .conversation-item:hover {
-                background-color: #f8f9fa;
-            }
+                .conversation-item:hover {
+                    background-color: #f8f9fa;
+                }
 
             .conversation-avatar {
                 width: 40px;
@@ -495,9 +495,9 @@
                 flex-shrink: 0; /* Prevent header from shrinking */
             }
 
-            .pm-chat-header button {
-                margin-right: 10px;
-            }
+                .pm-chat-header button {
+                    margin-right: 10px;
+                }
 
             .pm-chat-messages {
                 flex: 1;
@@ -507,40 +507,23 @@
                 flex-direction: column;
             }
 
-            /* Message wrapper and options styling */
             .pm-message {
                 margin-bottom: 10px;
-                max-width: 60%; /* Reduce from 70% to 60% for smaller bubbles */
-                position: relative;
-                word-wrap: break-word;
-                display: flex;
-                align-items: flex-start;
-            }
-
-            .message-wrapper {
-                padding: 6px 10px; /* Reduce padding from 8px 12px to 6px 10px */
+                max-width: 80%;
+                padding: 8px 12px;
                 border-radius: 15px;
-                flex: 1;
-                word-wrap: break-word;
-                overflow: hidden; /* Prevent overflow */
-                font-size: 0.95rem; /* Slightly smaller font size */
+                position: relative;
+                word-wrap: break-word; /* Allow long words to break */
             }
 
             .pm-message-sent {
                 align-self: flex-end;
-                flex-direction: row; /* Was row-reverse, change to row for correct menu position */
-            }
-
-            .pm-message-received {
-                align-self: flex-start;
-            }
-
-            .pm-message-sent .message-wrapper {
                 background-color: #007bff;
                 color: white;
             }
 
-            .pm-message-received .message-wrapper {
+            .pm-message-received {
+                align-self: flex-start;
                 background-color: #e9ecef;
                 color: #212529;
             }
@@ -576,199 +559,43 @@
                 z-index: 10; /* Keep on top */
             }
 
-            .pm-chat-input .input-group {
-                display: flex;
-                align-items: stretch;
-            }
+                .pm-chat-input .input-group {
+                    display: flex;
+                    align-items: stretch;
+                }
 
-            .pm-chat-input textarea {
-                resize: none;
-                height: 38px;
-                min-height: 38px; /* Enforce minimum height */
-                max-height: 100px;
-                overflow-y: auto;
-                flex: 1;
-            }
+                .pm-chat-input textarea {
+                    resize: none;
+                    height: 38px;
+                    min-height: 38px; /* Enforce minimum height */
+                    max-height: 100px;
+                    overflow-y: auto;
+                    flex: 1;
+                }
 
-            .pm-chat-input button {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
+                .pm-chat-input button {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
 
-            /* Message options styling */
-            .message-options {
-                position: relative;
-                opacity: 0;
-                transition: opacity 0.2s;
-                margin: 0 5px;
-                align-self: center;
-            }
+                /* For mobile responsiveness */
+                @@media (max-width: 576px) {
+                    .private-messages-panel
 
-            .pm-message:hover .message-options {
-                opacity: 1;
-            }
+                {
+                    width: 100%;
+                    height: 100%;
+                    bottom: 0;
+                    right: 0;
+                    border-radius: 0;
+                }
 
-            .pm-message-sent .message-options {
-                order: 0; /* Place on the right side for sent messages */
-            }
+                .pm-message {
+                    max-width: 90%;
+                }
 
-            .pm-message-received .message-options {
-                order: 1; /* Place on the left side for received messages */
-            }
-
-            .message-options-btn {
-                background: none;
-                border: none;
-                color: #6c757d;
-                padding: 2px;
-                font-size: 0.8rem;
-                width: 24px;
-                height: 24px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-            }
-
-            .message-options-btn:hover {
-                background-color: rgba(0,0,0,0.05);
-            }
-
-            .message-options-menu {
-                position: absolute;
-                top: 0; /* Change from 100% to 0 */
-                transform: translateY(-100%); /* Position above the button instead of below */
-                background-color: white;
-                border: 1px solid #dee2e6;
-                border-radius: 4px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-                z-index: 10;
-                min-width: 120px;
-                right: 0; /* Position menu to the right by default */
-            }
-
-            .pm-message:first-child .message-options-menu,
-            .pm-message:nth-child(2) .message-options-menu {
-                top: 100%;
-                transform: translateY(0);
-            }
-
-            .pm-message-received .message-options-menu {
-                right: auto;
-                left: 0; /* Position menu to the left for received messages */
-            }
-
-            .pm-message-sent .message-options-menu {
-                left: auto;
-                right: 0;
-            }
-
-            .message-option {
-                padding: 8px 12px;
-                cursor: pointer;
-                font-size: 0.9rem;
-                display: flex;
-                align-items: center;
-            }
-
-            .message-option i {
-                margin-right: 8px;
-            }
-
-            .message-option:hover {
-                background-color: #f8f9fa;
-            }
-
-            /* Reply preview styling */
-            .reply-preview {
-                padding: 8px 12px;
-                background-color: #f0f2f5;
-                border-radius: 10px 10px 0 0;
-                margin-bottom: -1px;
-                border: 1px solid #dee2e6;
-                border-bottom: none;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-
-            .reply-preview-content {
-                font-size: 0.85rem;
-                color: #666;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                flex: 1;
-            }
-
-            .reply-cancel {
-                color: #999;
-                background: none;
-                border: none;
-                padding: 0 5px;
-            }
-
-            /* Edit form styling */
-            .message-edit-form {
-                width: 100%;
-            }
-
-            .edit-message-input {
-                width: 100%;
-                min-height: 60px;
-                font-size: 0.9rem;
-                resize: vertical;
-            }
-
-            .edit-actions {
-                display: flex;
-                justify-content: flex-end;
-                gap: 5px;
-            }
-
-            /* For mobile responsiveness */
-            @@media (max-width: 576px) {
-            .private-messages-panel
-            {
-                width: 100%;
-                height: 100%;
-                bottom: 0;
-                right: 0;
-                border-radius: 0;
-            }
-
-            .pm-message {
-                max-width: 90%;
-            }
-
-            /* Smaller message time */
-            .pm-message-time {
-                font-size: 0.65rem; /* Even smaller time text */
-                margin-top: 1px;
-                text-align: right;
-            }
-            /* Smaller reply preview */
-            .pm-message-reply {
-                font-size: 0.75rem; /* Smaller reply preview */
-                padding: 2px 6px;
-                background-color: rgba(0,0,0,0.1);
-                border-radius: 4px;
-                margin-bottom: 3px;
-            }
-            /* Style the recipient name link */
-            .pm-chat-header a {
-                display: inline-block;
-                font-weight: 500;
-                transition: color 0.2s;
-            }
-
-            .pm-chat-header a:hover {
-                color: #007bff !important;
-                text-decoration: underline !important;
-            }
-
-        }
+                }
         </style>
 
         <!-- Add SignalR client script -->
@@ -875,9 +702,6 @@
                     connection.on("PrivateMessageEdited", handlePrivateMessageEdited);
                     connection.on("PrivateMessageDeleted", handlePrivateMessageDeleted);
                     connection.on("ErrorMessage", handleErrorMessage);
-                    connection.on("PrivateMessageLiked", handlePrivateMessageLiked);
-                    connection.on("PrivateMessageEdited", handlePrivateMessageEdited);
-                    connection.on("PrivateMessageDeleted", handlePrivateMessageDeleted);
 
                     // Start the connection
                     console.log("Attempting to connect to SignalR hub...");
@@ -974,39 +798,11 @@
 
                 // Send message in active chat
                 function sendMessageInActiveChat() {
-                  const message = privateMessageInput.value.trim();
-                  if (!message || !activeRecipientUsername) return;
+                    const message = privateMessageInput.value.trim();
+                    if (!message || !activeRecipientUsername) return;
 
-                  // Check if this is a reply
-                  const replyPreview = document.querySelector('.reply-preview');
-                  if (replyPreview) {
-                    const replyToIdStr = replyPreview.getAttribute('data-reply-to');
-                    const replyToId = parseInt(replyToIdStr, 10); // Convert to integer
-
-                    if (isNaN(replyToId)) {
-                      console.error("Invalid reply message ID:", replyToIdStr);
-                      alert("Cannot reply: Invalid message ID");
-                      replyPreview.remove();
-                      return;
-                    }
-
-                    // Send as a reply
-                    if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                      connection.invoke("SendPrivateMessage", currentUsername, activeRecipientUsername, message, replyToId)
-                        .catch(err => {
-                          console.error("Error sending private message:", err);
-                          alert("Error sending message: " + err);
-                        });
-                    }
-
-                    // Remove the reply preview
-                    replyPreview.remove();
-                  } else {
-                    // Send as a normal message
                     sendPrivateMessageToUser(activeRecipientUsername, message);
-                  }
-
-                  privateMessageInput.value = '';
+                    privateMessageInput.value = '';
                 }
 
                 // Send private message to user
@@ -1038,7 +834,6 @@
 
                     // Update UI
                     chatRecipientName.textContent = recipientUsername;
-                    chatRecipientName.innerHTML = `<a href="/PublicProfile/${recipientUsername}" class="text-decoration-none text-dark">${recipientUsername}</a>`;
                     privateChatMessages.innerHTML = '<div class="text-center p-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
 
                     // Hide tabs content and show chat area
@@ -1056,28 +851,6 @@
 
                     connection.invoke("MarkPrivateMessagesAsRead", currentUsername, conversationId)
                         .catch(err => console.error("Error marking messages as read:", err));
-                }
-
-                function ensureMenuVisible(menuElement) {
-                  // Check if menu exists
-                  if (!menuElement) return;
-
-                  const chatContainer = document.getElementById('privateChatMessages');
-                  if (!chatContainer) return;
-
-                  const menuRect = menuElement.getBoundingClientRect();
-                  const containerRect = chatContainer.getBoundingClientRect();
-
-                  // Check if menu extends beyond the visible area
-                  if (menuRect.top < containerRect.top) {
-                    // Menu extends above the container
-                    const scrollAdjustment = menuRect.top - containerRect.top - 10;
-                    chatContainer.scrollTop += scrollAdjustment;
-                  } else if (menuRect.bottom > containerRect.bottom) {
-                    // Menu extends below the container
-                    const scrollAdjustment = menuRect.bottom - containerRect.bottom + 10;
-                    chatContainer.scrollTop += scrollAdjustment;
-                  }
                 }
 
                 // Handle conversations loaded
@@ -1146,448 +919,123 @@
 
                 // Handle conversation loaded
                 function handleConversationLoaded(conversationId, recipientUsername, recipientProfilePic, messages) {
-                  // Update UI
-                  chatRecipientName.textContent = recipientUsername;
-                  chatRecipientName.innerHTML = `<a href="/PublicProfile/${recipientUsername}" class="text-decoration-none text-dark">${recipientUsername}</a>`;
-                  let html = '';
+                    // Update UI
+                    chatRecipientName.textContent = recipientUsername;
+                    let html = '';
 
-                  if (messages.length === 0) {
-                    html = '<div class="text-center p-3 text-muted"><small>No messages yet. Start the conversation!</small></div>';
-                  } else {
-                    let lastDate = null;
+                    if (messages.length === 0) {
+                        html = '<div class="text-center p-3 text-muted"><small>No messages yet. Start the conversation!</small></div>';
+                    } else {
+                        let lastDate = null;
 
-                    messages.forEach(msg => {
-                      // Check if we need to add a date separator
-                      const msgDate = new Date(msg.sentAt);
-                      const msgDateStr = msgDate.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+                        messages.forEach(msg => {
+                            // Check if we need to add a date separator
+                            const msgDate = new Date(msg.sentAt);
+                            const msgDateStr = msgDate.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
 
-                      if (lastDate !== msgDateStr) {
-                        html += `<div class="text-center my-3"><small class="bg-light px-2 py-1 rounded">${msgDateStr}</small></div>`;
-                        lastDate = msgDateStr;
-                      }
+                            if (lastDate !== msgDateStr) {
+                                html += `<div class="text-center my-3"><small class="bg-light px-2 py-1 rounded">${msgDateStr}</small></div>`;
+                                lastDate = msgDateStr;
+                            }
 
-                      // Format time
-                      const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            // Format time
+                            const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-                      // Determine message class
-                      const messageClass = msg.isFromCurrentUser ? 'pm-message-sent' : 'pm-message-received';
+                            // Determine message class
+                            const messageClass = msg.isFromCurrentUser ? 'pm-message-sent' : 'pm-message-received';
 
-                      // Add reply info if this is a reply
-                      let replyHtml = '';
-                      if (msg.replyToId) {
-                        replyHtml = `
-                        <div class="pm-message-reply">
-                          <small><strong>${msg.replyToSenderName}:</strong> ${truncateText(msg.replyToContent, 50)}</small>
-                        </div>
-                        `;
-                      }
+                            // Add reply info if this is a reply
+                            let replyHtml = '';
+                            if (msg.replyToId) {
+                                replyHtml = `
+                                <div class="pm-message-reply">
+                                    <small><strong>${msg.replyToSenderName}:</strong> ${truncateText(msg.replyToContent, 50)}</small>
+                                </div>
+                                `;
+                            }
 
-                      // Add edited indicator if message was edited
-                      const editedHtml = msg.isEdited ? ' <small><i>(edited)</i></small>' : '';
+                            // Add edited indicator if message was edited
+                            const editedHtml = msg.isEdited ? ' <small><i>(edited)</i></small>' : '';
 
-                      // Add likes indicator if has likes
-                      const likesHtml = msg.likesCount > 0 ? `<small class="ms-2"><i class="bi bi-heart-fill text-danger"></i> ${msg.likesCount}</small>` : '';
+                            // Add likes indicator if has likes
+                            const likesHtml = msg.likesCount > 0 ? `<small class="ms-2"><i class="bi bi-heart-fill text-danger"></i> ${msg.likesCount}</small>` : '';
 
-                      html += `
-                      <div class="pm-message ${messageClass}" data-id="${msg.id}">
-                        <div class="message-wrapper">
-                          ${replyHtml}
-                          ${msg.content}${editedHtml}
-                          <div class="pm-message-time">${timeStr}${likesHtml}</div>
-                        </div>
-                      </div>
-                      `;
-                    });
-                  }
+                            html += `
+                            <div class="pm-message ${messageClass}" data-id="${msg.id}">
+                                ${replyHtml}
+                                ${msg.content}${editedHtml}
+                                <div class="pm-message-time">${timeStr}${likesHtml}</div>
+                            </div>
+                            `;
+                        });
+                    }
 
-                  privateChatMessages.innerHTML = html;
-                  privateChatMessages.scrollTop = privateChatMessages.scrollHeight;
+                    privateChatMessages.innerHTML = html;
+                    privateChatMessages.scrollTop = privateChatMessages.scrollHeight;
 
-                  // Fix the typo here - was ddContextMenuToMessages()
-                  addContextMenuToMessages();
+                    // Mark messages as read
+                    markMessagesAsRead(conversationId);
 
-                  // Mark messages as read
-                  markMessagesAsRead(conversationId);
-
-                  setTimeout(() => {
-                    privateMessageInput.focus();
-                  }, 100);
+                    setTimeout(() => {
+                        privateMessageInput.focus();
+                    }, 100);
                 }
 
                 // Handle receive private message
                 function handleReceivePrivateMessage(conversationId, otherUsername, isFromCurrentUser, message) {
-                  // If this is for the active conversation, add it to the chat
-                  if (activeConversationId === conversationId) {
-                    const msgDate = new Date(message.sentAt);
-                    const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const messageClass = isFromCurrentUser ? 'pm-message-sent' : 'pm-message-received';
+                    // If this is for the active conversation, add it to the chat
+                    if (activeConversationId === conversationId) {
+                        const msgDate = new Date(message.sentAt);
+                        const timeStr = msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const messageClass = isFromCurrentUser ? 'pm-message-sent' : 'pm-message-received';
 
-                    // Add reply info if this is a reply
-                    let replyHtml = '';
-                    if (message.replyToId) {
-                      replyHtml = `
-                      <div class="pm-message-reply">
-                        <small><strong>${message.replyToSenderName}:</strong> ${truncateText(message.replyToContent, 50)}</small>
-                      </div>
-                      `;
+                        // Add reply info if this is a reply
+                        let replyHtml = '';
+                        if (message.replyToId) {
+                            replyHtml = `
+                            <div class="pm-message-reply">
+                                <small><strong>${message.replyToSenderName}:</strong> ${truncateText(message.replyToContent, 50)}</small>
+                            </div>
+                            `;
+                        }
+
+                        // Check if we need a date separator
+                        const msgDateStr = msgDate.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+                        const lastDateEl = privateChatMessages.querySelector('.text-center small.bg-light');
+                        const lastDateStr = lastDateEl ? lastDateEl.textContent : null;
+
+                        let dateHtml = '';
+                        if (lastDateStr !== msgDateStr) {
+                            dateHtml = `<div class="text-center my-3"><small class="bg-light px-2 py-1 rounded">${msgDateStr}</small></div>`;
+                        }
+
+                        // Add the message
+                        const msgHtml = `
+                        ${dateHtml}
+                        <div class="pm-message ${messageClass}" data-id="${message.id}">
+                            ${replyHtml}
+                            ${message.content}
+                            <div class="pm-message-time">${timeStr}</div>
+                        </div>
+                        `;
+
+                        // Remove "no messages" notice if present
+                        const noMessagesEl = privateChatMessages.querySelector('.text-center.p-3.text-muted');
+                        if (noMessagesEl) {
+                            privateChatMessages.innerHTML = '';
+                        }
+
+                        privateChatMessages.insertAdjacentHTML('beforeend', msgHtml);
+                        privateChatMessages.scrollTop = privateChatMessages.scrollHeight;
+
+                        // Mark as read if we're the receiver
+                        if (!isFromCurrentUser) {
+                            markMessagesAsRead(conversationId);
+                        }
                     }
 
-                    // Check if we need a date separator
-                    const msgDateStr = msgDate.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
-                    const lastDateEl = privateChatMessages.querySelector('.text-center small.bg-light');
-                    const lastDateStr = lastDateEl ? lastDateEl.textContent : null;
-
-                    let dateHtml = '';
-                    if (lastDateStr !== msgDateStr) {
-                      dateHtml = `<div class="text-center my-3"><small class="bg-light px-2 py-1 rounded">${msgDateStr}</small></div>`;
-                    }
-
-                    // Add the message
-                    const msgHtml = `
-                    ${dateHtml}
-                    <div class="pm-message ${messageClass}" data-id="${message.id}">
-                      <div class="message-wrapper">
-                        ${replyHtml}
-                        ${message.content}
-                        <div class="pm-message-time">${timeStr}</div>
-                      </div>
-                    </div>
-                    `;
-
-                    // Remove "no messages" notice if present
-                    const noMessagesEl = privateChatMessages.querySelector('.text-center.p-3.text-muted');
-                    if (noMessagesEl) {
-                      privateChatMessages.innerHTML = '';
-                    }
-
-                    privateChatMessages.insertAdjacentHTML('beforeend', msgHtml);
-                    privateChatMessages.scrollTop = privateChatMessages.scrollHeight;
-                    addContextMenuToMessages();
-
-                    // Mark as read if we're the receiver
-                    if (!isFromCurrentUser) {
-                      markMessagesAsRead(conversationId);
-                    }
-                  }
-
-                  // Refresh conversations list to show the latest message
-                  loadUserConversations();
-                }
-
-                function addContextMenuToMessages() {
-                  // Get all message elements that don't already have options
-                  const messageElements = document.querySelectorAll('.pm-message:not(.has-options)');
-
-                  messageElements.forEach(messageEl => {
-                    const messageId = messageEl.getAttribute('data-id');
-                    if (!messageId) return; // Skip if no message ID
-
-                    const isSentMessage = messageEl.classList.contains('pm-message-sent');
-
-                    // Create the three dots button
-                    const optionsBtn = document.createElement('button');
-                    optionsBtn.className = 'btn btn-sm message-options-btn';
-                    optionsBtn.innerHTML = '<i class="bi bi-three-dots-vertical"></i>';
-
-                    // Create the dropdown menu
-                    const dropdownMenu = document.createElement('div');
-                    dropdownMenu.className = 'message-options-menu d-none';
-
-                    // Add reply option for all messages
-                    const replyOption = document.createElement('div');
-                    replyOption.className = 'message-option';
-                    replyOption.innerHTML = '<i class="bi bi-reply"></i> Reply';
-                    replyOption.addEventListener('click', (e) => {
-                      e.stopPropagation();
-                      replyToMessage(messageId);
-                      closeAllMenus();
-                    });
-                    dropdownMenu.appendChild(replyOption);
-
-                    // Add like option for all messages
-                    const likeOption = document.createElement('div');
-                    likeOption.className = 'message-option';
-                    likeOption.innerHTML = '<i class="bi bi-heart"></i> Like';
-                    likeOption.addEventListener('click', (e) => {
-                      e.stopPropagation();
-                      likeMessage(messageId);
-                      closeAllMenus();
-                    });
-                    dropdownMenu.appendChild(likeOption);
-
-                    // Only show edit and delete for messages sent by current user
-                    if (isSentMessage) {
-                      // Add edit option
-                      const editOption = document.createElement('div');
-                      editOption.className = 'message-option';
-                      editOption.innerHTML = '<i class="bi bi-pencil"></i> Edit';
-                      editOption.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        editMessage(messageId);
-                        closeAllMenus();
-                      });
-                      dropdownMenu.appendChild(editOption);
-
-                      // Add delete option
-                      const deleteOption = document.createElement('div');
-                      deleteOption.className = 'message-option';
-                      deleteOption.innerHTML = '<i class="bi bi-trash"></i> Delete';
-                      deleteOption.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        deleteMessage(messageId);
-                        closeAllMenus();
-                      });
-                      dropdownMenu.appendChild(deleteOption);
-                    }
-
-                    // Create container for the dropdown
-                    const optionsContainer = document.createElement('div');
-                    optionsContainer.className = 'message-options';
-                    optionsContainer.appendChild(optionsBtn);
-                    optionsContainer.appendChild(dropdownMenu);
-
-                    // Add click event to toggle menu
-                                // Add this to the click event handler for the options button
-                    optionsBtn.addEventListener('click', (e) => {
-                      e.stopPropagation();
-                      closeAllMenus();
-                      dropdownMenu.classList.toggle('d-none');
-
-                      // If menu is now visible, ensure it's fully visible in the scroll area
-                      if (!dropdownMenu.classList.contains('d-none')) {
-                        ensureMenuVisible(dropdownMenu);
-                      }
-                    });
-
-                    // Add the options to the message
-                    messageEl.appendChild(optionsContainer);
-
-                    // Update the message element's class to indicate it has options
-                    messageEl.classList.add('has-options');
-                  });
-
-                  // Helper function to close all menus
-                  function closeAllMenus() {
-                    document.querySelectorAll('.message-options-menu:not(.d-none)').forEach(menu => {
-                      menu.classList.add('d-none');
-                    });
-                  }
-                }
-
-                // Reply to a message
-                function replyToMessage(messageId) {
-                  console.log("Reply to message:", messageId); // Debug log
-                  const messageIdInt = parseInt(messageId, 10); // Store the integer version for later
-
-                  // Find the message element and get its content
-                  const messageEl = document.querySelector(`.pm-message[data-id="${messageId}"]`);
-                  if (!messageEl) {
-                    console.error("Message element not found:", messageId);
-                    return;
-                  }
-
-                  const messageContent = messageEl.textContent.trim();
-                  const isSentMessage = messageEl.classList.contains('pm-message-sent');
-
-                  // Get sender name
-                  let senderName;
-                  if (isSentMessage) {
-                    senderName = 'You';
-                  } else {
-                    senderName = activeRecipientUsername;
-                  }
-
-                  // Create reply preview and add to input area
-                  const replyPreview = document.createElement('div');
-                  replyPreview.className = 'reply-preview';
-                  replyPreview.innerHTML = `
-                    <div class="reply-preview-content">
-                      <strong>${senderName}:</strong> ${truncateText(messageContent, 50)}
-                    </div>
-                    <button type="button" class="btn btn-sm reply-cancel">
-                      <i class="bi bi-x"></i>
-                    </button>
-                  `;
-
-                  // Add data attribute to track which message we're replying to
-                  // Store as string in DOM, but will parse to int when using
-                  replyPreview.setAttribute('data-reply-to', messageId);
-
-                  // Add cancel button functionality
-                  replyPreview.querySelector('.reply-cancel').addEventListener('click', () => {
-                    replyPreview.remove();
-                    privateMessageInput.focus();
-                  });
-
-                  // Add preview before the input
-                  const inputContainer = document.querySelector('.pm-chat-input .input-group');
-                  inputContainer.parentNode.insertBefore(replyPreview, inputContainer);
-
-                  // Focus on the input
-                  privateMessageInput.focus();
-                }
-
-                // Edit a message
-                function editMessage(messageId) {
-                  console.log("Edit message:", messageId); // Debug log
-                  const messageIdInt = parseInt(messageId, 10); // Convert to integer
-
-                  if (isNaN(messageIdInt)) {
-                    console.error("Invalid message ID:", messageId);
-                    alert("Cannot edit message: Invalid message ID");
-                    return;
-                  }
-
-                  // Find the message element
-                  const messageEl = document.querySelector(`.pm-message[data-id="${messageId}"]`);
-                  if (!messageEl) {
-                    console.error("Message element not found:", messageId);
-                    return;
-                  }
-
-                  const messageWrapper = messageEl.querySelector('.message-wrapper');
-                  if (!messageWrapper) {
-                    console.error("Message wrapper not found");
-                    return;
-                  }
-
-                  // Get the message content (without the time element)
-                  const messageTimeEl = messageWrapper.querySelector('.pm-message-time');
-                  const replyEl = messageWrapper.querySelector('.pm-message-reply');
-
-                  // Keep a copy of the time element and reply element
-                  const timeElClone = messageTimeEl ? messageTimeEl.cloneNode(true) : null;
-                  const replyElClone = replyEl ? replyEl.cloneNode(true) : null;
-
-                  // Get the message text content
-                  let messageContent = messageWrapper.innerText || '';
-
-                  // Remove the time part and reply part from content
-                  if (messageTimeEl) {
-                    messageContent = messageContent.replace(messageTimeEl.innerText, '').trim();
-                  }
-                  if (replyEl) {
-                    messageContent = messageContent.replace(replyEl.innerText, '').trim();
-                  }
-
-                  // Remove "(edited)" if present
-                  messageContent = messageContent.replace('(edited)', '').trim();
-
-                  console.log("Message content to edit:", messageContent); // Debug log
-
-                  // Create edit form
-                  const editForm = document.createElement('div');
-                  editForm.className = 'message-edit-form';
-                  editForm.innerHTML = `
-                    <textarea class="form-control edit-message-input">${messageContent}</textarea>
-                    <div class="edit-actions mt-2">
-                      <button type="button" class="btn btn-sm btn-secondary edit-cancel">Cancel</button>
-                      <button type="button" class="btn btn-sm btn-primary edit-save">Save</button>
-                    </div>
-                  `;
-
-                  // Store original content
-                  const originalContent = messageWrapper.innerHTML;
-
-                  // Replace message content with edit form
-                  messageWrapper.innerHTML = '';
-                  if (replyElClone) messageWrapper.appendChild(replyElClone);
-                  messageWrapper.appendChild(editForm);
-                  if (timeElClone) messageWrapper.appendChild(timeElClone);
-
-                  // Focus on textarea and place cursor at end
-                  const textarea = editForm.querySelector('textarea');
-                  textarea.focus();
-                  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-
-                  // Add cancel button functionality
-                  editForm.querySelector('.edit-cancel').addEventListener('click', () => {
-                    messageWrapper.innerHTML = originalContent;
-                  });
-
-                  // Add save button functionality
-                  editForm.querySelector('.edit-save').addEventListener('click', () => {
-                    const newContent = textarea.value.trim();
-                    if (newContent && newContent !== messageContent) {
-                      console.log("Saving new content:", newContent); // Debug log
-
-                      // Call SignalR method to update message
-                      if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                        connection.invoke("EditPrivateMessage", messageIdInt, currentUsername, newContent)
-                          .then(() => {
-                            console.log("Message edited successfully");
-                          })
-                          .catch(err => {
-                            console.error("Error editing message:", err);
-                            alert("Error editing message: " + err);
-                            // Revert to original content on error
-                            messageWrapper.innerHTML = originalContent;
-                          });
-                      } else {
-                        console.error("Not connected to SignalR");
-                        alert("Cannot edit message. Not connected to server.");
-                        messageWrapper.innerHTML = originalContent;
-                      }
-                    } else {
-                      // If no changes, revert to original
-                      messageWrapper.innerHTML = originalContent;
-                    }
-                  });
-                }
-
-                // Delete a message
-                function deleteMessage(messageId) {
-                  console.log("Delete message:", messageId); // Debug log
-                  const messageIdInt = parseInt(messageId, 10); // Convert to integer
-
-                  if (isNaN(messageIdInt)) {
-                    console.error("Invalid message ID:", messageId);
-                    alert("Cannot delete message: Invalid message ID");
-                    return;
-                  }
-
-                  // Confirm before deleting
-                  if (confirm('Are you sure you want to delete this message?')) {
-                    if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                      connection.invoke("DeletePrivateMessage", messageIdInt, currentUsername)
-                        .then(() => {
-                          console.log("Message deleted successfully");
-                        })
-                        .catch(err => {
-                          console.error("Error deleting message:", err);
-                          alert("Error deleting message: " + err);
-                        });
-                    } else {
-                      console.error("Not connected to SignalR");
-                      alert("Cannot delete message. Not connected to server.");
-                    }
-                  }
-                }
-
-                // Like a message
-                function likeMessage(messageId) {
-                  console.log("Like message:", messageId); // Debug log
-                  const messageIdInt = parseInt(messageId, 10); // Convert to integer
-
-                  if (isNaN(messageIdInt)) {
-                    console.error("Invalid message ID:", messageId);
-                    alert("Cannot like message: Invalid message ID");
-                    return;
-                  }
-
-                  if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                    connection.invoke("LikePrivateMessage", messageIdInt, currentUsername)
-                      .then(() => {
-                        console.log("Message liked successfully");
-                      })
-                      .catch(err => {
-                        console.error("Error liking message:", err);
-                        alert("Error liking message: " + err);
-                      });
-                  } else {
-                    console.error("Not connected to SignalR");
-                    alert("Cannot like message. Not connected to server.");
-                  }
+                    // Refresh conversations list to show the latest message
+                    loadUserConversations();
                 }
 
                 // Handle new private message notification
@@ -1612,58 +1060,46 @@
 
                 // Handle message liked
                 function handlePrivateMessageLiked(messageId, likeCount) {
-                  console.log("Message liked:", messageId, likeCount);
-
-                  // Update like count on message
-                  const messageEl = document.querySelector(`.pm-message[data-id="${messageId}"]`);
-                  if (messageEl) {
-                    const timeEl = messageEl.querySelector('.message-wrapper .pm-message-time');
-                    if (timeEl) {
-                      // Check if like indicator already exists
-                      const likeEl = timeEl.querySelector('.bi-heart-fill');
-                      if (likeEl) {
-                        // Update existing likes
-                        likeEl.parentNode.innerHTML = `<i class="bi bi-heart-fill text-danger"></i> ${likeCount}`;
-                      } else {
-                        // Add likes indicator
-                        timeEl.insertAdjacentHTML('beforeend', ` <small class="ms-2"><i class="bi bi-heart-fill text-danger"></i> ${likeCount}</small>`);
-                      }
+                    // Update like count on message
+                    const messageEl = privateChatMessages.querySelector(`.pm-message[data-id="${messageId}"] .pm-message-time`);
+                    if (messageEl) {
+                        // Check if like indicator already exists
+                        const likeEl = messageEl.querySelector('.bi-heart-fill');
+                        if (likeEl) {
+                            // Update existing likes
+                            likeEl.parentNode.innerHTML = `<i class="bi bi-heart-fill text-danger"></i> ${likeCount}`;
+                        } else {
+                            // Add likes indicator
+                            messageEl.insertAdjacentHTML('beforeend', ` <small class="ms-2"><i class="bi bi-heart-fill text-danger"></i> ${likeCount}</small>`);
+                        }
                     }
-                  }
                 }
 
                 // Handle message edited
                 function handlePrivateMessageEdited(messageId, newContent) {
-                  console.log("Message edited:", messageId, newContent);
+                    // Update message content
+                    const messageEl = privateChatMessages.querySelector(`.pm-message[data-id="${messageId}"]`);
+                    if (messageEl) {
+                        // Get the reply part if it exists
+                        const replyEl = messageEl.querySelector('.pm-message-reply');
+                        const replyHtml = replyEl ? replyEl.outerHTML : '';
 
-                  // Update message content
-                  const messageEl = document.querySelector(`.pm-message[data-id="${messageId}"]`);
-                  if (messageEl) {
-                    const messageWrapper = messageEl.querySelector('.message-wrapper');
-                    if (messageWrapper) {
-                      // Get the reply part if it exists
-                      const replyEl = messageWrapper.querySelector('.pm-message-reply');
-                      const replyHtml = replyEl ? replyEl.outerHTML : '';
+                        // Get the time part
+                        const timeEl = messageEl.querySelector('.pm-message-time');
+                        const timeHtml = timeEl ? timeEl.outerHTML : '';
 
-                      // Get the time part
-                      const timeEl = messageWrapper.querySelector('.pm-message-time');
-                      const timeHtml = timeEl ? timeEl.outerHTML : '';
-
-                      // Update content preserving reply and time
-                      messageWrapper.innerHTML = `${replyHtml}${newContent} <small><i>(edited)</i></small>${timeHtml}`;
+                        // Update content preserving reply and time
+                        messageEl.innerHTML = `${replyHtml}${newContent} <small><i>(edited)</i></small>${timeHtml}`;
                     }
-                  }
                 }
 
                 // Handle message deleted
                 function handlePrivateMessageDeleted(messageId) {
-                  console.log("Message deleted:", messageId);
-
-                  // Remove message from UI
-                  const messageEl = document.querySelector(`.pm-message[data-id="${messageId}"]`);
-                  if (messageEl) {
-                    messageEl.remove();
-                  }
+                    // Remove message from UI
+                    const messageEl = privateChatMessages.querySelector(`.pm-message[data-id="${messageId}"]`);
+                    if (messageEl) {
+                        messageEl.remove();
+                    }
                 }
 
                 // Handle error messages
@@ -1710,15 +1146,8 @@
                     textarea.style.height = newHeight + 'px';
                 }
 
-                            // Add click event to document to close all menus when clicking outside
-                document.addEventListener('click', function(e) {
-                  // Close all open context menus when clicking outside of them
-                  if (!e.target.closest('.message-options')) {
-                    document.querySelectorAll('.message-options-menu:not(.d-none)').forEach(menu => {
-                      menu.classList.add('d-none');
-                    });
-                  }
-                });
+
+
 
                 // Initialize the connection
                 connectToSignalR();
