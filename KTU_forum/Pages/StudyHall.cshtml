@@ -1,0 +1,1243 @@
+﻿@page
+@model KTU_forum.Pages.StudyHallModel
+@{
+    var roomName = Model.RoomName;
+    var username = Model.Username;
+    var profilePic = Model.ProfilePicturePath;
+    var userRole = Model.UserRole;
+}
+<div class="container-fluid vh-100 d-flex flex-column">
+    <div class="card shadow border-0 rounded-4 mb-0 flex-fill">
+        <div class="card-body p-4 d-flex flex-column">
+
+            <div class="search-container mb-2">
+                <div class="input-group">
+                    <span class="input-group-text bg-light">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="messageSearch" class="form-control" placeholder="Search messages..." />
+                    <button id="clearSearchBtn" class="btn btn-outline-secondary d-none">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <!-- Search results dropdown -->
+                <div id="searchResultsDropdown" class="search-results-dropdown d-none">
+                    <div class="search-results-header px-3 py-2 border-bottom d-flex justify-content-between align-items-center">
+                        <span>Search Results (<span id="matchCount">0</span>)</span>
+                        <button id="closeSearchResultsBtn" class="btn btn-sm text-muted p-0">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                    <div id="searchResultsList" class="search-results-list"></div>
+                </div>
+            </div>
+
+            <!-- Chat Messages Area -->
+            <div class="messages-container flex-fill overflow-auto" style="max-height: calc(100vh - 150px);">
+                <ul id="messagesList" class="list-unstyled">
+                    @foreach (var message in Model.Messages)
+                    {
+                        var formattedTime = message.SentAt.ToString("yyyy-MM-dd | HH:mm");
+                        <li class="d-flex align-items-start mb-3 message-item position-relative" id="message-@message.MessageId">
+                            @if (string.IsNullOrWhiteSpace(message.SenderProfilePic))
+                            {
+                                <img src="@(string.IsNullOrWhiteSpace(message.SenderProfilePic)
+                                         ? "profile-pictures/default.png"
+                                         : message.SenderProfilePic)"
+                                     class="rounded-circle profile-pic me-2"
+                                     style="width: 40px; height: 40px;" />
+                            }
+                            else
+                            {
+                                <img src="@message.SenderProfilePic"
+                                     class="rounded-circle profile-pic"
+                                     style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;" />
+                            }
+                            <div style="width: 100%;">
+                                <!-- Reply indicator (if this message is a reply) -->
+                                @if (message.IsReply)
+                                {
+                                    <div class="reply-info mb-1 border-start border-2 ps-2" style="border-color: #e0e0e0 !important; font-size: 0.85rem; background-color: #f8f9fa; border-radius: 0.25rem; padding: 0.25rem;">
+                                        <div class="reply-sender fw-bold text-muted">
+                                            <i class="bi bi-reply"></i> Replying to @message.ReplyToUsername
+                                        </div>
+                                        <div class="reply-content text-muted text-truncate" style="max-width: 90%;">
+                                            @message.ReplyToContent
+                                        </div>
+                                    </div>
+                                }
+
+                                <small class="text-muted">
+                                    @message.SenderUsername
+                                    @if (!string.IsNullOrEmpty(message.SenderRole))
+                                    {
+                                        <span class="badge bg-success text-white ms-1" style="opacity: 0.4; font-size: 0.75rem;">@message.SenderRole</span>
+                                    }
+                                    • @formattedTime
+                                </small>
+                                <p class="mb-1">@message.Content</p>
+                                @if (message.IsEdited)
+                                {
+                                    <small class="text-muted edited-indicator">(edited)</small>
+                                }
+                                <!-- Like counter display -->
+                                <div class="d-flex align-items-center">
+                                    <span class="likes-count badge bg-light text-dark me-2" id="likes-@message.MessageId">
+                                        @if (message.LikesCount > 0)
+                                        {
+                                            <i class="bi bi-hand-thumbs-up-fill"></i> @message.LikesCount
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="message-actions position-absolute top-0 end-0 me-2 mt-2">
+                                <button class="btn btn-sm btn-light message-options-btn">...</button>
+                                <div class="message-menu d-none bg-light border rounded shadow-sm p-2">
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <button class="btn btn-sm btn-outline-primary me-1 like-btn"
+                                                data-message-id="@message.MessageId"
+                                                data-has-liked="@message.hasLiked.ToString().ToLower()">
+                                            @if (message.hasLiked)
+                                            {
+                                                <text>👎 Unlike</text>
+                                            }
+                                            else
+                                            {
+                                                <text>👍 Like</text>
+                                            }
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-primary reply-btn"
+                                                data-message-id="@message.MessageId"
+                                                data-sender="@message.SenderUsername"
+                                                data-content="@message.Content">
+                                            ↩️ Reply
+                                        </button>
+
+                                        @if (message.SenderUsername == Model.Username)
+                                        {
+                                            <button class="btn btn-sm btn-outline-primary edit-btn"
+                                                    data-message-id="@message.MessageId"
+                                                    data-content="@message.Content">
+                                                ✏️ Edit
+                                            </button>
+
+                                            <button class="btn btn-sm btn-outline-danger delete-btn"
+                                                    data-message-id="@message.MessageId">
+                                                🗑️ Delete
+                                            </button>
+                                        }
+
+                                        <a href="/PublicProfile/@message.SenderUsername" class="btn btn-sm btn-outline-primary view-profile-btn">
+                                            👤 Profile
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <!-- Message Input Area -->
+            <div class="message-input-area mt-3">
+                <!-- Reply info box (hidden by default) -->
+                <div id="replyContainer" class="reply-container bg-light p-2 mb-2 rounded d-none">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="fw-bold"><i class="bi bi-reply"></i> Replying to <span id="replyToUsername"></span></span>
+                            <p class="mb-0 text-muted small text-truncate" id="replyToContent"></p>
+                        </div>
+                        <button id="cancelReplyBtn" class="btn btn-sm text-muted" title="Cancel reply">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <input type="text" id="messageInput" class="form-control me-2" placeholder="Enter your message" />
+                    <button id="sendButton" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SignalR JS Script -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.10/signalr.min.js"></script>
+<script>
+    var username = '@username';
+    var profilePicPath = '@profilePic';
+    var roomName = '@roomName';
+    var userRole = '@userRole';
+    let isReplying = false;
+    let replyToId = null;
+
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/chatHub")
+        .build();
+
+    connection.start()
+        .then(function () {
+            connection.invoke("JoinRoom", roomName);
+            console.log("Connected to SignalR hub!");
+        })
+        .catch(function (err) {
+            console.error("SignalR Connection Error:", err.toString());
+        });
+
+    // Handle like updates from server
+    connection.on("UpdateLikes", function (messageId, likeCount) {
+        console.log("Received UpdateLikes:", messageId, likeCount);
+        const likesCountElement = document.getElementById("likes-" + messageId);
+        if (likesCountElement) {
+            if (likeCount > 0) {
+                likesCountElement.innerHTML = `<i class="bi bi-hand-thumbs-up-fill"></i> ${likeCount}`;
+            } else {
+                likesCountElement.innerHTML = '';
+            }
+        }
+    });
+
+    // New handler for like status updates
+    connection.on("UpdateLikeStatus", function (messageId, hasLiked, likeCount) {
+        console.log("Received UpdateLikeStatus:", messageId, hasLiked, likeCount);
+
+        // Find the like button for this message
+        const likeBtns = document.querySelectorAll(`.like-btn[data-message-id="${messageId}"]`);
+        const likesCountElement = document.getElementById("likes-" + messageId);
+
+        // Update like button text and data attribute
+        likeBtns.forEach(btn => {
+            btn.dataset.hasLiked = hasLiked.toString();
+            btn.textContent = hasLiked ? "👎 Unlike" : "👍 Like";
+        });
+
+        // Update the likes count
+        if (likesCountElement) {
+            if (likeCount > 0) {
+                likesCountElement.innerHTML = `<i class="bi bi-hand-thumbs-up-fill"></i> ${likeCount}`;
+            } else {
+                likesCountElement.innerHTML = '';
+            }
+        }
+    });
+
+    // handler for message editing
+    connection.on("MessageEdited", function (messageId, newContent) {
+        console.log("Message edited:", messageId, newContent);
+        const messageElement = document.getElementById("message-" + messageId);
+        if (messageElement) {
+            // Update the content paragraph
+            const contentElement = messageElement.querySelector("p.mb-1");
+            if (contentElement) {
+                contentElement.textContent = newContent;
+
+                // Add a small "edited" indicator if not already present
+                if (!contentElement.nextElementSibling || !contentElement.nextElementSibling.classList.contains('edited-indicator')) {
+                    const editedIndicator = document.createElement("small");
+                    editedIndicator.classList.add("text-muted", "edited-indicator");
+                    editedIndicator.innerHTML = "(edited)";
+                    contentElement.insertAdjacentElement('afterend', editedIndicator);
+                }
+
+                // IMPORTANT FIX: Update the data-content attribute of the edit button
+                const editBtn = messageElement.querySelector(".edit-btn");
+                if (editBtn) {
+                    editBtn.dataset.content = newContent;
+                }
+            }
+        }
+    });
+
+    // handler for message deletion
+    connection.on("MessageDeleted", function (messageId) {
+        console.log("Message deleted:", messageId);
+        const messageElement = document.getElementById("message-" + messageId);
+        if (messageElement) {
+            // Fade out and remove
+            messageElement.style.opacity = "0";
+            setTimeout(() => messageElement.remove(), 500);
+        }
+    });
+
+    // Handle error messages from server
+    connection.on("ErrorMessage", function (errorMessage) {
+        console.error("Server error:", errorMessage);
+        alert(errorMessage);
+    });
+
+    connection.on("ReceiveMessage", function (user, message, profilePic, role, messageId) {
+        const messagesList = document.getElementById("messagesList");
+        const messageItem = document.createElement("li");
+        messageItem.classList.add("d-flex", "align-items-start", "mb-3", "message-item", "position-relative");
+        messageItem.id = "message-" + (messageId || "TEMP_ID");
+
+        const img = document.createElement("img");
+        img.src = profilePic && profilePic.trim() !== "" ? profilePic : "/profile-pictures/default.png";
+        img.classList.add("rounded-circle", "profile-pic");
+        img.style.width = "40px";
+        img.style.height = "40px";
+        img.style.objectFit = "cover";
+        img.style.marginRight = "10px";
+
+        const messageContent = document.createElement("div");
+        messageContent.style.width = "100%";
+
+        const meta = document.createElement("small");
+        meta.classList.add("text-muted");
+
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = currentDate.getDate().toString().padStart(2, '0');
+        const hours = currentDate.getHours().toString().padStart(2, '0');
+        const minutes = currentDate.getMinutes().toString().padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day} | ${hours}:${minutes}`;
+
+        // Create the username and role part
+        meta.innerHTML = `${user}`;
+
+        // Add role badge if role exists
+        if (role) {
+            const roleBadge = document.createElement("span");
+            roleBadge.classList.add("badge", "bg-success", "text-white", "ms-1");
+            roleBadge.style.opacity = "0.4";
+            roleBadge.style.fontSize = "0.75rem";
+            roleBadge.textContent = role;
+            meta.appendChild(roleBadge);
+        }
+
+        // Add the timestamp
+        meta.innerHTML += ` • ${formattedDate}`;
+
+        const messageText = document.createElement("p");
+        messageText.classList.add("mb-1");
+        messageText.textContent = message;
+
+        // Add likes count element
+        const likesContainer = document.createElement("div");
+        likesContainer.classList.add("d-flex", "align-items-center");
+
+        const likesCount = document.createElement("span");
+        likesCount.classList.add("likes-count", "badge", "bg-light", "text-dark", "me-2");
+        likesCount.id = "likes-" + (messageId || "TEMP_ID");
+
+        likesContainer.appendChild(likesCount);
+
+        const messageActions = document.createElement("div");
+        messageActions.classList.add("message-actions", "position-absolute", "top-0", "end-0", "me-2", "mt-2");
+
+        const optionsButton = document.createElement("button");
+        optionsButton.classList.add("btn", "btn-sm", "btn-light", "message-options-btn");
+        optionsButton.textContent = "...";
+
+        const messageMenu = document.createElement("div");
+        messageMenu.classList.add("message-menu", "d-none", "bg-light", "border", "rounded", "shadow-sm", "p-2");
+
+        // Create the flex container for buttons
+        const btnContainer = document.createElement("div");
+        btnContainer.classList.add("d-flex", "flex-wrap", "gap-1");
+
+        const likeButton = document.createElement("button");
+        likeButton.classList.add("btn", "btn-sm", "btn-outline-primary", "me-1", "like-btn");
+        likeButton.textContent = "👍 Like";
+        likeButton.dataset.messageId = messageId || "TEMP_ID";
+        likeButton.dataset.hasLiked = "false";
+
+        const replyButton = document.createElement("button");
+        replyButton.classList.add("btn", "btn-sm", "btn-outline-primary", "reply-btn");
+        replyButton.textContent = "↩️ Reply";
+        replyButton.dataset.messageId = messageId || "TEMP_ID";
+        replyButton.dataset.sender = user;
+        replyButton.dataset.content = message;
+
+        const viewProfileLink = document.createElement("a");
+        viewProfileLink.href = `/PublicProfile/${user}`;
+        viewProfileLink.classList.add("btn", "btn-sm", "btn-outline-primary", "view-profile-btn");
+        viewProfileLink.textContent = "👤 Profile";
+
+        // Add buttons to the container
+        btnContainer.appendChild(likeButton);
+        btnContainer.appendChild(replyButton);
+
+        // Add edit and delete buttons if current user is the message sender
+        if (user === username) {
+            const editButton = document.createElement("button");
+            editButton.classList.add("btn", "btn-sm", "btn-outline-primary", "edit-btn");
+            editButton.textContent = "✏️ Edit";
+            editButton.dataset.messageId = messageId || "TEMP_ID";
+            editButton.dataset.content = message;
+            btnContainer.appendChild(editButton);
+
+            const deleteButton = document.createElement("button");
+            deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger", "delete-btn");
+            deleteButton.textContent = "🗑️ Delete";
+            deleteButton.dataset.messageId = messageId || "TEMP_ID";
+            btnContainer.appendChild(deleteButton);
+        }
+
+        btnContainer.appendChild(viewProfileLink);
+        messageMenu.appendChild(btnContainer);
+        messageActions.appendChild(optionsButton);
+        messageActions.appendChild(messageMenu);
+
+        messageContent.appendChild(meta);
+        messageContent.appendChild(messageText);
+        messageContent.appendChild(likesContainer);
+        messageItem.appendChild(img);
+        messageItem.appendChild(messageContent);
+        messageItem.appendChild(messageActions);
+        messagesList.appendChild(messageItem);
+
+        scrollToBottom();
+    });
+
+    connection.on("ReceiveReply", function (user, message, profilePic, role, messageId, replyToId, originalSender, originalContent) {
+        const messagesList = document.getElementById("messagesList");
+        const messageItem = document.createElement("li");
+        messageItem.classList.add("d-flex", "align-items-start", "mb-3", "message-item", "position-relative");
+        messageItem.id = "message-" + messageId;
+
+        // Use default image if profilePic is missing or empty
+        const profileImageSrc = profilePic && profilePic.trim() !== "" ? profilePic : "/profile-pictures/default.png";
+
+        if (!profilePic || profilePic.trim() === "") {
+            const profilePlaceholder = document.createElement("div");
+            profilePlaceholder.classList.add("profile-pic-placeholder", "rounded-circle", "bg-light", "d-flex", "justify-content-center", "align-items-center");
+            profilePlaceholder.style.width = "40px";
+            profilePlaceholder.style.height = "40px";
+            profilePlaceholder.style.marginRight = "10px";
+
+            const icon = document.createElement("i");
+            icon.classList.add("bi", "bi-person-circle");
+            icon.style.fontSize = "1.5rem";
+
+            profilePlaceholder.appendChild(icon);
+            messageItem.appendChild(profilePlaceholder);
+        }
+        else {
+            const img = document.createElement("img");
+            img.src = profilePic;
+            img.classList.add("rounded-circle", "profile-pic");
+            img.style.width = "40px";
+            img.style.height = "40px";
+            img.style.objectFit = "cover";
+            img.style.marginRight = "10px";
+            messageItem.appendChild(img);
+        }
+
+        // Content container
+        const contentContainer = document.createElement("div");
+        contentContainer.style.width = "100%";
+
+        // Create reply info
+        const replyInfo = document.createElement("div");
+        replyInfo.classList.add("reply-info", "mb-1", "border-start", "border-2", "ps-2");
+        replyInfo.style.borderColor = "#e0e0e0 !important";
+        replyInfo.style.fontSize = "0.85rem";
+        replyInfo.style.backgroundColor = "#f8f9fa";
+        replyInfo.style.borderRadius = "0.25rem";
+        replyInfo.style.padding = "0.25rem";
+
+        const replySender = document.createElement("div");
+        replySender.classList.add("reply-sender", "fw-bold", "text-muted");
+        replySender.innerHTML = `<i class="bi bi-reply"></i> Replying to ${originalSender}`;
+
+        const replyContent = document.createElement("div");
+        replyContent.classList.add("reply-content", "text-muted", "text-truncate");
+        replyContent.style.maxWidth = "90%";
+        replyContent.textContent = originalContent;
+
+        replyInfo.appendChild(replySender);
+        replyInfo.appendChild(replyContent);
+        contentContainer.appendChild(replyInfo);
+
+        const meta = document.createElement("small");
+        meta.classList.add("text-muted");
+
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = currentDate.getDate().toString().padStart(2, '0');
+        const hours = currentDate.getHours().toString().padStart(2, '0');
+        const minutes = currentDate.getMinutes().toString().padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day} | ${hours}:${minutes}`;
+
+        // Create the username text node first
+        const usernameText = document.createTextNode(user);
+        meta.appendChild(usernameText);
+
+        // Add role badge if role exists
+        if (role) {
+            const roleBadge = document.createElement("span");
+            roleBadge.classList.add("badge", "bg-success", "text-white", "ms-1");
+            roleBadge.style.opacity = "0.4";
+            roleBadge.style.fontSize = "0.75rem";
+            roleBadge.textContent = role;
+            meta.appendChild(roleBadge);
+        }
+
+        // Add the timestamp
+        const timestampText = document.createTextNode(` • ${formattedDate}`);
+        meta.appendChild(timestampText);
+        contentContainer.appendChild(meta);
+
+        const messageText = document.createElement("p");
+        messageText.classList.add("mb-1");
+        messageText.textContent = message;
+        contentContainer.appendChild(messageText);
+
+        // Add likes count element
+        const likesContainer = document.createElement("div");
+        likesContainer.classList.add("d-flex", "align-items-center");
+
+        const likesCount = document.createElement("span");
+        likesCount.classList.add("likes-count", "badge", "bg-light", "text-dark", "me-2");
+        likesCount.id = "likes-" + messageId;
+
+        likesContainer.appendChild(likesCount);
+        contentContainer.appendChild(likesContainer);
+
+        // Message actions
+        const messageActions = document.createElement("div");
+        messageActions.classList.add("message-actions", "position-absolute", "top-0", "end-0", "me-2", "mt-2");
+
+        const optionsButton = document.createElement("button");
+        optionsButton.classList.add("btn", "btn-sm", "btn-light", "message-options-btn");
+        optionsButton.textContent = "...";
+
+        const messageMenu = document.createElement("div");
+        messageMenu.classList.add("message-menu", "d-none", "bg-light", "border", "rounded", "shadow-sm", "p-2");
+
+        // Create the flex container for buttons
+        const btnContainer = document.createElement("div");
+        btnContainer.classList.add("d-flex", "flex-wrap", "gap-1");
+
+        const likeButton = document.createElement("button");
+        likeButton.classList.add("btn", "btn-sm", "btn-outline-primary", "me-1", "like-btn");
+        likeButton.textContent = "👍 Like";
+        likeButton.dataset.messageId = messageId;
+        likeButton.dataset.hasLiked = "false";
+
+        const replyButton = document.createElement("button");
+        replyButton.classList.add("btn", "btn-sm", "btn-outline-primary", "reply-btn");
+        replyButton.textContent = "↩️ Reply";
+        replyButton.dataset.messageId = messageId;
+        replyButton.dataset.sender = user;
+        replyButton.dataset.content = message;
+
+        const viewProfileLink = document.createElement("a");
+        viewProfileLink.href = `/PublicProfile/${user}`;
+        viewProfileLink.classList.add("btn", "btn-sm", "btn-outline-primary", "view-profile-btn");
+        viewProfileLink.textContent = "👤 Profile";
+
+        // Add buttons to the container
+        btnContainer.appendChild(likeButton);
+        btnContainer.appendChild(replyButton);
+
+        // Add edit and delete buttons if current user is the message sender
+        if (user === username) {
+            const editButton = document.createElement("button");
+            editButton.classList.add("btn", "btn-sm", "btn-outline-primary", "edit-btn");
+            editButton.textContent = "✏️ Edit";
+            editButton.dataset.messageId = messageId;
+            editButton.dataset.content = message;
+            btnContainer.appendChild(editButton);
+
+            const deleteButton = document.createElement("button");
+            deleteButton.classList.add("btn", "btn-sm", "btn-outline-danger", "delete-btn");
+            deleteButton.textContent = "🗑️ Delete";
+            deleteButton.dataset.messageId = messageId;
+            btnContainer.appendChild(deleteButton);
+        }
+
+        btnContainer.appendChild(viewProfileLink);
+        messageMenu.appendChild(btnContainer);
+        messageActions.appendChild(optionsButton);
+        messageActions.appendChild(messageMenu);
+
+        messageItem.appendChild(contentContainer);
+        messageItem.appendChild(messageActions);
+        messagesList.appendChild(messageItem);
+
+        messagesList.scrollTop = messagesList.scrollHeight;
+    });
+
+    document.addEventListener("click", function (event) {
+        if (event.target.classList.contains("message-options-btn")) {
+            // Close any other open menus first
+            document.querySelectorAll(".message-menu:not(.d-none)").forEach(menu => {
+                menu.classList.add("d-none");
+            });
+
+            const messageActions = event.target.closest(".message-actions");
+            const menu = messageActions.querySelector(".message-menu");
+            menu.classList.toggle("d-none");
+        } else if (!event.target.closest(".message-menu") && !event.target.classList.contains("message-options-btn")) {
+            // Close any open menus if clicking outside
+            document.querySelectorAll(".message-menu:not(.d-none)").forEach(menu => {
+                menu.classList.add("d-none");
+            });
+        }
+
+        // Handle clicks on like buttons
+        if (event.target.closest(".like-btn")) {
+            const likeBtn = event.target.closest(".like-btn");
+            const messageId = likeBtn.dataset.messageId;
+            const hasLiked = likeBtn.dataset.hasLiked === "true";
+            
+            // Check if the user is logged in (username should be set)
+            if (!username || username.trim() === "") {
+                alert("Please log in.");
+                return; // Stop further execution if not logged in
+            }
+
+            // Close the menu immediately
+            const menu = likeBtn.closest(".message-menu");
+            if (menu) {
+                menu.classList.add("d-none");
+            }
+
+            if (hasLiked) {
+                // Remove the like
+                connection.invoke("RemoveLike", parseInt(messageId), username)
+                    .catch(err => console.error("Error removing like:", err.toString()));
+
+                // Optimistically update the UI
+                updateLikeButtonState(messageId, false);
+            } else {
+                // Add the like
+                connection.invoke("LikeMessage", parseInt(messageId), username)
+                    .catch(err => console.error("Error liking message:", err.toString()));
+
+                // Optimistically update the UI
+                updateLikeButtonState(messageId, true);
+            }
+        }
+
+        // Handle clicks on edit buttons (NEW)
+        if (event.target.closest(".edit-btn")) {
+            const editBtn = event.target.closest(".edit-btn");
+            const messageId = editBtn.dataset.messageId;
+            const currentContent = editBtn.dataset.content;
+
+            // Close the menu immediately
+            const menu = editBtn.closest(".message-menu");
+            if (menu) {
+                menu.classList.add("d-none");
+            }
+
+            // Show edit interface
+            showEditInterface(messageId, currentContent);
+        }
+
+        // Handle clicks on delete buttons
+        if (event.target.closest(".delete-btn")) {
+            if (confirm("Are you sure you want to delete this message?")) {
+                const deleteBtn = event.target.closest(".delete-btn");
+                const messageId = deleteBtn.dataset.messageId;
+
+                // Close the menu immediately
+                const menu = deleteBtn.closest(".message-menu");
+                if (menu) {
+                    menu.classList.add("d-none");
+                }
+
+                connection.invoke("DeleteMessage", parseInt(messageId), username)
+                    .catch(err => console.error("Error deleting message:", err.toString()));
+            }
+        }
+
+        // Reply button click handling
+        if (event.target.classList.contains("reply-btn")) {
+            const messageId = event.target.dataset.messageId;
+            const sender = event.target.dataset.sender;
+            const content = event.target.dataset.content;
+
+            // Close the menu immediately
+            const menu = event.target.closest(".message-menu");
+            if (menu) {
+                menu.classList.add("d-none");
+            }
+
+            // Set reply state
+            isReplying = true;
+            replyToId = messageId;
+
+            // Show reply UI
+            document.getElementById("replyContainer").classList.remove("d-none");
+            document.getElementById("replyToUsername").textContent = sender;
+            document.getElementById("replyToContent").textContent = content;
+
+            // Focus the input field
+            document.getElementById("messageInput").focus();
+        }
+
+        // Handle cancel edit button (NEW)
+        if (event.target.closest("#cancelEditBtn")) {
+            const messageId = event.target.closest("#cancelEditBtn").dataset.messageId;
+            cancelEdit(messageId);
+        }
+
+        // Handle save edit button (NEW)
+        if (event.target.closest("#saveEditBtn")) {
+            const messageId = event.target.closest("#saveEditBtn").dataset.messageId;
+            saveEdit(messageId);
+        }
+    });
+
+            // Search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('messageSearch');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const searchResultsDropdown = document.getElementById('searchResultsDropdown');
+        const searchResultsList = document.getElementById('searchResultsList');
+        const matchCountElement = document.getElementById('matchCount');
+        const closeSearchResultsBtn = document.getElementById('closeSearchResultsBtn');
+
+        // Function to perform search and populate results
+        function performSearch() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+
+            // If search term is empty, hide results and return
+            if (searchTerm.length === 0) {
+                searchResultsDropdown.classList.add('d-none');
+                clearSearchBtn.classList.add('d-none');
+                return;
+            }
+
+            // Show clear button
+            clearSearchBtn.classList.remove('d-none');
+
+            // Get all messages
+            const messageItems = document.querySelectorAll('.message-item');
+            let matchingMessages = [];
+
+            // Find matching messages
+            messageItems.forEach((message, index) => {
+                const messageId = message.id.split('-')[1];
+                const contentElement = message.querySelector('p.mb-1');
+                const senderElement = message.querySelector('small.text-muted');
+                const replyElement = message.querySelector('.reply-content');
+
+                if (!contentElement) return;
+
+                const messageContent = contentElement.textContent.toLowerCase();
+                const senderInfo = senderElement ? senderElement.textContent.toLowerCase() : '';
+                const replyContent = replyElement ? replyElement.textContent.toLowerCase() : '';
+
+                // Check if search term is found in message content, sender info, or reply content
+                if (messageContent.includes(searchTerm) ||
+                    senderInfo.includes(searchTerm) ||
+                    replyContent.includes(searchTerm)) {
+
+                    // Format timestamp from the message
+                    let timestamp = '';
+                    const timeElement = senderElement ? senderElement.textContent.split('•')[1]?.trim() : '';
+                    if (timeElement) {
+                        timestamp = timeElement;
+                    }
+
+                    // Get the sender username
+                    let sender = '';
+                    if (senderElement) {
+                        // Extract the username part before any "•" symbol
+                        const senderText = senderElement.textContent;
+                        sender = senderText.split('•')[0].trim();
+
+                        // If there's a role badge, trim it out
+                        if (sender.includes('Student') || sender.includes('Admin')) {
+                            sender = sender.replace(/Student|Admin/g, '').trim();
+                        }
+                    }
+
+                    matchingMessages.push({
+                        id: messageId,
+                        content: messageContent,
+                        sender: sender,
+                        timestamp: timestamp,
+                        element: message,
+                        index: index
+                    });
+                }
+            });
+
+            // Update match count
+            matchCountElement.textContent = matchingMessages.length;
+
+            // Clear previous results
+            searchResultsList.innerHTML = '';
+
+            // If no results found
+            if (matchingMessages.length === 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'p-3 text-muted text-center';
+                noResults.textContent = 'No matching messages found';
+                searchResultsList.appendChild(noResults);
+            } else {
+                // Create result items for each matching message
+                matchingMessages.forEach(match => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item p-2 border-bottom';
+                    resultItem.dataset.messageId = match.id;
+
+                    // Highlight the matching text in content
+                    let highlightedContent = match.content;
+                    const maxContentLength = 80; // Limit content length
+
+                    if (highlightedContent.length > maxContentLength) {
+                        // Find the position of the match
+                        const matchPos = highlightedContent.toLowerCase().indexOf(searchTerm);
+
+                        // Determine start position to center the match
+                        let startPos = Math.max(0, matchPos - Math.floor(maxContentLength / 2));
+
+                        // Adjust if we're near the end
+                        if (startPos + maxContentLength > highlightedContent.length) {
+                            startPos = Math.max(0, highlightedContent.length - maxContentLength);
+                        }
+
+                        // Add ellipsis if not starting from the beginning
+                        let displayContent = (startPos > 0 ? '...' : '') +
+                                            highlightedContent.substring(startPos, startPos + maxContentLength) +
+                                            (startPos + maxContentLength < highlightedContent.length ? '...' : '');
+
+                        highlightedContent = displayContent;
+                    }
+
+                    // Create the inner HTML for the result item
+                    resultItem.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold">${match.sender}</span>
+                            <small class="text-muted">${match.timestamp}</small>
+                        </div>
+                        <div class="message-preview">${highlightedContent}</div>
+                    `;
+
+                    // Add click event to jump to message
+                    resultItem.addEventListener('click', () => {
+                        scrollToMessage(match.element, match.id);
+                    });
+
+                    searchResultsList.appendChild(resultItem);
+                });
+            }
+
+            // Show results dropdown
+            searchResultsDropdown.classList.remove('d-none');
+        }
+
+        // Function to highlight a message and scroll to it
+        function scrollToMessage(messageElement, messageId) {
+            if (!messageElement) return;
+
+            // Remove any existing highlight classes
+            document.querySelectorAll('.message-item.highlight-jump').forEach(item => {
+                item.classList.remove('highlight-jump');
+            });
+
+            // Scroll the message into view
+            messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Add highlight animation class
+            messageElement.classList.add('highlight-jump');
+
+            // Remove the highlight class after animation completes
+            setTimeout(() => {
+                messageElement.classList.remove('highlight-jump');
+            }, 2000);
+
+            // Hide search results after jumping
+            searchResultsDropdown.classList.add('d-none');
+        }
+
+        // Clear search function
+        function clearSearch() {
+            searchInput.value = '';
+            searchResultsDropdown.classList.add('d-none');
+            clearSearchBtn.classList.add('d-none');
+        }
+
+        // Event listeners
+        searchInput.addEventListener('input', performSearch);
+        clearSearchBtn.addEventListener('click', clearSearch);
+        closeSearchResultsBtn.addEventListener('click', () => {
+            searchResultsDropdown.classList.add('d-none');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.search-container') && !searchResultsDropdown.classList.contains('d-none')) {
+                searchResultsDropdown.classList.add('d-none');
+            }
+        });
+
+        // Add keyboard shortcut for searching (Ctrl+F or Cmd+F)
+        document.addEventListener('keydown', function(e) {
+            // Check if Ctrl+F or Cmd+F was pressed
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault(); // Prevent default browser search
+                searchInput.focus();
+            }
+
+            // Clear search on Escape key
+            if (e.key === 'Escape') {
+                if (document.activeElement === searchInput) {
+                    clearSearch();
+                } else if (!searchResultsDropdown.classList.contains('d-none')) {
+                    searchResultsDropdown.classList.add('d-none');
+                }
+            }
+        });
+    });
+
+    document.getElementById("sendButton").addEventListener("click", function () {
+        sendMessage();
+    });
+
+    document.getElementById("messageInput").addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    });
+
+    document.getElementById("cancelReplyBtn").addEventListener("click", function() {
+        cancelReply();
+    });
+
+    function cancelReply() {
+        isReplying = false;
+        replyToId = null;
+        document.getElementById("replyContainer").classList.add("d-none");
+    }
+
+    function sendMessage() {
+        const message = document.getElementById("messageInput").value;
+        if (!username) {
+            alert("Please log in.");
+            return;
+        }
+        if (!message.trim()) {
+            alert("Please input a message.");
+            return;
+        }
+
+        if (isReplying && replyToId) {
+            // Send as a reply
+            connection.invoke("SendReply", username, roomName, message, parseInt(replyToId), userRole)
+                .catch(err => console.error("Error sending reply:", err.toString()));
+        } else {
+            // Send as a normal message
+            connection.invoke("SendMessage", username, roomName, message, userRole)
+                .catch(err => console.error("Error sending message:", err.toString()));
+        }
+        // Clear input and reset reply state
+        document.getElementById("messageInput").value = "";
+        cancelReply();
+    }
+
+    // Function to update like button state
+    function updateLikeButtonState(messageId, hasLiked) {
+        // Find all like buttons for this message (there might be multiple if dynamically added)
+        const likeBtns = document.querySelectorAll(`.like-btn[data-message-id="${messageId}"]`);
+
+        // Update like button text and data attribute
+        likeBtns.forEach(btn => {
+            btn.dataset.hasLiked = hasLiked.toString();
+            btn.textContent = hasLiked ? "👎 Unlike" : "👍 Like";
+        });
+
+        // Update the likes count element - this is optimistic and will be corrected when server responds
+        const likesCountElement = document.getElementById("likes-" + messageId);
+        if (likesCountElement) {
+            // Get current count
+            let currentText = likesCountElement.textContent || "";
+            let currentCount = 0;
+
+            if (currentText.includes(" ")) {
+                currentCount = parseInt(currentText.split(" ")[1]) || 0;
+            }
+
+            // Adjust count based on action
+            let newCount = hasLiked ? currentCount + 1 : currentCount - 1;
+
+            // Update display
+            if (newCount > 0) {
+                likesCountElement.innerHTML = `<i class="bi bi-hand-thumbs-up-fill"></i> ${newCount}`;
+            } else {
+                likesCountElement.innerHTML = '';
+            }
+        }
+    }
+
+    // Function to show edit interface
+    function showEditInterface(messageId, currentContent) {
+        const messageElement = document.getElementById("message-" + messageId);
+        if (!messageElement) return;
+
+        // Get the message content element
+        const contentElement = messageElement.querySelector("p.mb-1");
+        if (!contentElement) return;
+
+        // Save original content and hide it
+        contentElement.dataset.originalContent = contentElement.textContent;
+        contentElement.style.display = "none";
+
+        // Hide any edited indicator if present
+        const editedIndicator = contentElement.nextElementSibling;
+        if (editedIndicator && editedIndicator.classList.contains('edited-indicator')) {
+            editedIndicator.style.display = "none";
+        }
+
+        // Create edit interface
+        const editContainer = document.createElement("div");
+        editContainer.className = "edit-container mb-2";
+        editContainer.id = "edit-container-" + messageId;
+
+        // Create textarea with current content
+        const editTextarea = document.createElement("textarea");
+        editTextarea.className = "form-control mb-2";
+        editTextarea.id = "edit-textarea-" + messageId;
+        editTextarea.value = currentContent || contentElement.textContent;
+
+        // Create buttons container
+        const buttonContainer = document.createElement("div");
+        buttonContainer.className = "d-flex justify-content-end";
+
+        // Create save button
+        const saveButton = document.createElement("button");
+        saveButton.className = "btn btn-sm btn-primary me-2";
+        saveButton.id = "saveEditBtn";
+        saveButton.dataset.messageId = messageId;
+        saveButton.textContent = "Save";
+
+        // Create cancel button
+        const cancelButton = document.createElement("button");
+        cancelButton.className = "btn btn-sm btn-secondary";
+        cancelButton.id = "cancelEditBtn";
+        cancelButton.dataset.messageId = messageId;
+        cancelButton.textContent = "Cancel";
+
+        // Assemble the edit interface
+        buttonContainer.appendChild(saveButton);
+        buttonContainer.appendChild(cancelButton);
+        editContainer.appendChild(editTextarea);
+        editContainer.appendChild(buttonContainer);
+
+        // Insert edit interface after content element
+        contentElement.insertAdjacentElement('afterend', editContainer);
+
+        // Focus the textarea
+        editTextarea.focus();
+    }
+
+    // Function to cancel edit
+    function cancelEdit(messageId) {
+        const messageElement = document.getElementById("message-" + messageId);
+        if (!messageElement) return;
+
+        // Get the content element and edit container
+        const contentElement = messageElement.querySelector("p.mb-1");
+        const editContainer = document.getElementById("edit-container-" + messageId);
+
+        if (contentElement && editContainer) {
+            // Show original content
+            contentElement.style.display = "";
+
+            // Show edited indicator if it exists
+            const editedIndicator = contentElement.nextElementSibling;
+            if (editedIndicator && editedIndicator.classList.contains('edited-indicator')) {
+                editedIndicator.style.display = "";
+            }
+
+            // Remove edit container
+            editContainer.remove();
+        }
+    }
+
+    // Function to save edit
+    function saveEdit(messageId) {
+        const editTextarea = document.getElementById("edit-textarea-" + messageId);
+        if (!editTextarea) return;
+
+        const newContent = editTextarea.value.trim();
+        if (!newContent) {
+            alert("Message cannot be empty");
+            return;
+        }
+
+        // Send to server
+        connection.invoke("EditMessage", parseInt(messageId), username, newContent)
+            .then(() => {
+                // Find the edit button for this message and update its content attribute
+                const messageElement = document.getElementById("message-" + messageId);
+                if (messageElement) {
+                    const editBtn = messageElement.querySelector(".edit-btn");
+                    if (editBtn) {
+                        editBtn.dataset.content = newContent;
+                    }
+
+                    // The UI will be updated via the MessageEdited event
+                    cancelEdit(messageId);
+                }
+            })
+            .catch(err => {
+                console.error("Error editing message:", err.toString());
+                alert("Error saving your edit. Please try again.");
+            });
+    }
+
+
+    // Scroll to bottom when page loads
+    window.addEventListener("load", function () {
+        scrollToBottom();
+    });
+
+    // Function to scroll to the bottom of the messages container
+    function scrollToBottom() {
+        const messagesContainer = document.querySelector(".messages-container");
+        if (messagesContainer) {
+            // Smooth scroll to the bottom of the container
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 100); // Small delay to ensure the DOM updates first
+        }
+    }
+
+</script>
+
+<style>
+    /* Your CSS rules here */
+    .message-actions {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin-top: 0.5rem;
+        margin-right: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .message-options-btn {
+        padding: 0.1rem 0.5rem;
+        line-height: 1;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+        cursor: pointer;
+    }
+
+        .message-options-btn:hover {
+            background-color: #e9ecef;
+        }
+
+    .message-menu {
+        position: absolute;
+        top: 100%; /* Position below the button */
+        right: 0;
+        z-index: 10;
+        min-width: 200px; /* Wider to accommodate horizontal layout */
+    }
+
+        .message-menu .d-flex {
+            flex-wrap: wrap;
+        }
+
+        .message-menu button,
+        .message-menu a {
+            margin: 2px;
+            flex: 1 0 auto;
+            text-align: center;
+            white-space: nowrap;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+            .message-menu button:hover,
+            .message-menu a:hover {
+                background-color: #e9ecef;
+            }
+
+    .likes-count {
+        font-size: 0.8rem;
+    }
+
+    .message-item {
+        transition: opacity 0.5s ease;
+    }
+
+    .edited-indicator {
+        font-style: italic;
+        font-size: 0.75rem;
+        opacity: 0.7;
+        margin-left: 5px;
+    }
+
+    .edit-container {
+        width: 100%;
+    }
+
+    /* Search related styles */
+    .search-container {
+        position: relative;
+        z-index: 1000;
+        margin-bottom: 10px;
+    }
+
+    #messageSearch:focus {
+        box-shadow: none;
+        border-color: #ced4da;
+    }
+
+    /* Search results dropdown styling */
+    .search-results-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 300px;
+        overflow-y: auto;
+        background-color: white;
+        border: 1px solid rgba(0,0,0,.125);
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,.1);
+        z-index: 1050;
+    }
+
+    .search-results-header {
+        background-color: #f8f9fa;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+    }
+
+    .search-result-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+        .search-result-item:hover {
+            background-color: #f8f9fa;
+        }
+
+    .message-preview {
+        white-space: pre-wrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    /* Animation for message jump highlight */
+    .highlight-jump {
+        animation: highlight-pulse 2s ease-out;
+    }
+
+    @@keyframes highlight-pulse {
+        0% {
+            background-color: rgba(173, 216, 230, 0.7);
+        }
+
+        100% {
+            background-color: transparent;
+        }
+    }
+</style>
