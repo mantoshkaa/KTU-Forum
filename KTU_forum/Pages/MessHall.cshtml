@@ -413,7 +413,7 @@
         });
     }
 
-    function sendMessage() {
+        function sendMessage() {
         const messageInput = document.getElementById("messageInput");
         const imageInput = document.getElementById("imageInput");
         const message = messageInput.value.trim();
@@ -431,41 +431,17 @@
         }
 
         if (file) {
-            const formData = new FormData();
-            formData.append("imageFile", file);
-            formData.append("messageContent", message);
-
-            console.log("Sending image upload request with message:", message, "file:", file.name);
-
-            fetch("/MessHall?handler=UploadImage", {
-                method: "POST",
-                body: formData,
-                credentials: "same-origin" // Include session cookies
-            })
-            .then(response => {
-                console.log("Upload response status:", response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log("Upload response data:", data);
-                if (data.success) {
-                    messageInput.value = "";
-                    imageInput.value = "";
-                    imageLabel.classList.remove("btn-primary");
-                    imageLabel.classList.add("btn-secondary");
-                    cancelReply();
-                } else {
-                    alert(`Error: ${data.error}`);
-                }
-            })
-            .catch(err => {
-                console.error("Upload error:", err.message);
-                alert(`Failed to send message/image: ${err.message}`);
-            });
+            // Use the new uploadImageWithMessage function
+            uploadImageWithMessage(file, message)
+                .then(() => {
+                    // Optional: Additional actions after successful upload
+                    console.log("Image and/or message uploaded successfully");
+                })
+                .catch(error => {
+                    console.error("Upload failed:", error);
+                });
         } else {
+            // Existing SignalR message send logic for text-only messages
             const invokeMethod = isReplying && replyToId ? "SendReply" : "SendMessage";
             const invokeArgs = isReplying && replyToId
                 ? [USERNAME, ROOM_NAME, message, parseInt(replyToId), USER_ROLE]
@@ -841,6 +817,70 @@
                 else if (!searchResultsDropdown.classList.contains('d-none')) searchResultsDropdown.classList.add('d-none');
             }
         });
+    }
+
+            async function uploadImageWithMessage(file, message) {
+        try {
+            // Client-side validation
+            const maxSizeBytes = 5 * 1024 * 1024; // 5MB
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+            if (!allowedTypes.includes(file.type)) {
+                throw new Error('Invalid file type. Only JPEG, PNG, and GIF are allowed.');
+            }
+
+            if (file.size > maxSizeBytes) {
+                throw new Error('File is too large. Maximum size is 5MB.');
+            }
+
+            const formData = new FormData();
+            formData.append("imageFile", file);
+            formData.append("messageContent", message);
+
+            const response = await fetch("/MessHall?handler=UploadImage", {
+                method: "POST",
+                body: formData,
+                credentials: "same-origin"
+            });
+
+            // Log the raw response for debugging
+            const responseText = await response.text();
+            console.log("Raw response:", responseText);
+
+            // Try to parse the response
+            let data;
+            try {
+                data = JSON.parse(responseText);
+            } catch (parseError) {
+                console.error("JSON Parsing Error:", parseError);
+                throw new Error(`Server returned non-JSON response: ${responseText}`);
+            }
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Upload failed');
+            }
+
+            if (data.success) {
+                // Reset UI elements
+                const messageInput = document.getElementById("messageInput");
+                const imageInput = document.getElementById("imageInput");
+                const imageLabel = document.getElementById("imageLabel");
+
+                messageInput.value = "";
+                imageInput.value = "";
+                imageLabel.classList.remove("btn-primary");
+                imageLabel.classList.add("btn-secondary");
+
+                console.log("Message uploaded successfully with ID:", data.messageId);
+                cancelReply();
+            } else {
+                throw new Error(data.error || 'Unknown server error');
+            }
+        } catch (error) {
+            console.error("Upload error:", error.message);
+            alert(`Failed to send message/image: ${error.message}`);
+            throw error; // Re-throw to allow further handling
+        }
     }
 
     function formatTimestamp(date) {

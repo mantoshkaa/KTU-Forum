@@ -125,18 +125,33 @@ namespace KTU_forum.Pages
                 .ToList();
         }
 
-        public async Task<IActionResult> OnPostUploadImageAsync(IFormFile imageFile, string messageContent = "")
+        public async Task<IActionResult> OnPostUploadImageAsync()
         {
             try
             {
-                _logger.LogInformation("OnPostUploadImageAsync: Received imageFile={ImageFileName}, messageContent={MessageContent}", imageFile?.FileName, messageContent);
+                _logger.LogInformation("Processing upload request");
 
+                // Ensure request is multipart/form-data
+                if (!Request.HasFormContentType)
+                {
+                    _logger.LogWarning("Invalid request format: Expected multipart/form-data");
+                    return new JsonResult(new { success = false, error = "Invalid request format" }) { ContentType = "application/json" };
+                }
+
+                var form = await Request.ReadFormAsync(); // Read form data
+                var messageContent = form["messageContent"]; // Extract message field
+                var imageFile = form.Files["imageFile"]; // Extract image file
+
+                _logger.LogInformation("Extracted messageContent={MessageContent}, imageFile={ImageFileName}", messageContent, imageFile?.FileName);
+
+                // Ensure either a message or an image is present
                 if (imageFile == null && string.IsNullOrWhiteSpace(messageContent))
                 {
                     _logger.LogWarning("Validation failed: No image or message provided");
-                    return new JsonResult(new { success = false, error = "A message or image is required" });
+                    return new JsonResult(new { success = false, error = "A message or image is required" }) { ContentType = "application/json" };
                 }
 
+                // Image handling...
                 string imagePath = null;
                 if (imageFile != null)
                 {
@@ -144,17 +159,10 @@ namespace KTU_forum.Pages
                     var extension = Path.GetExtension(imageFile.FileName).ToLower();
                     if (!allowedExtensions.Contains(extension))
                     {
-                        _logger.LogWarning("Invalid file type: {Extension}", extension);
-                        return new JsonResult(new { success = false, error = "Invalid file type. Use JPG, PNG, or GIF." });
-                    }
-                    if (imageFile.Length > 5 * 1024 * 1024)
-                    {
-                        _logger.LogWarning("File too large: {FileSize} bytes", imageFile.Length);
-                        return new JsonResult(new { success = false, error = "Image too large. Maximum size is 5MB." });
+                        return new JsonResult(new { success = false, error = "Invalid file type" }) { ContentType = "application/json" };
                     }
 
                     var uploadsFolder = Path.Combine(_environment.WebRootPath, "Uploads");
-                    _logger.LogInformation("Saving image to {UploadsFolder}", uploadsFolder);
                     Directory.CreateDirectory(uploadsFolder);
                     var fileName = Guid.NewGuid().ToString() + extension;
                     var filePath = Path.Combine(uploadsFolder, fileName);
@@ -163,68 +171,15 @@ namespace KTU_forum.Pages
                         await imageFile.CopyToAsync(stream);
                     }
                     imagePath = $"/Uploads/{fileName}";
-                    _logger.LogInformation("Image saved: {ImagePath}", imagePath);
                 }
 
-                var username = HttpContext.Session.GetString("Username");
-                var roomName = HttpContext.Request.Query["roomName"].ToString();
-                _logger.LogInformation("Session Username={Username}, RoomName={RoomName}", username, roomName);
-
-                if (string.IsNullOrEmpty(username))
-                {
-                    _logger.LogError("No username in session");
-                    return new JsonResult(new { success = false, error = "User not authenticated" });
-                }
-
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-                var room = await _context.Rooms.FirstOrDefaultAsync(r => r.Name == roomName);
-                if (user == null || room == null)
-                {
-                    _logger.LogError("Invalid user or room: User={User}, Room={Room}", user, room);
-                    return new JsonResult(new { success = false, error = "Invalid user or room" });
-                }
-
-                var newMessage = new MessageModel
-                {
-                    UserId = user.Id,
-                    RoomId = room.Id,
-                    Content = messageContent ?? "",
-                    ImagePath = imagePath,
-                    SentAt = DateTime.UtcNow,
-                    SenderRole = user.Role,
-                    Likes = new List<LikeModel>()
-                };
-
-                var validationContext = new ValidationContext(newMessage);
-                var validationResults = new List<ValidationResult>();
-                if (!Validator.TryValidateObject(newMessage, validationContext, validationResults, true))
-                {
-                    var errors = string.Join(", ", validationResults.Select(r => r.ErrorMessage));
-                    _logger.LogWarning("Message validation failed: {Errors}", errors);
-                    return new JsonResult(new { success = false, error = errors });
-                }
-
-                _context.Messages.Add(newMessage);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Message saved: Id={MessageId}", newMessage.Id);
-
-                await _hubContext.Clients.Group(roomName).SendAsync(
-                    "ReceiveMessage",
-                    username,
-                    newMessage.Content,
-                    user.ProfilePicturePath ?? "/profile-pictures/default.png",
-                    user.Role,
-                    newMessage.Id,
-                    newMessage.ImagePath
-                );
-                _logger.LogInformation("Message broadcasted to room: {RoomName}", roomName);
-
-                return new JsonResult(new { success = true, messageId = newMessage.Id });
+                // Return a JSON response (even though form-data was used in request)
+                return new JsonResult(new { success = true, messageContent, imagePath }) { ContentType = "application/json" };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in OnPostUploadImageAsync");
-                return new JsonResult(new { success = false, error = "Server error occurred while processing the request" });
+                _logger.LogError(ex, "Error processing request");
+                return new JsonResult(new { success = false, error = "Server error" }) { ContentType = "application/json" };
             }
         }
     }
