@@ -10,6 +10,7 @@ using KTU_forum.Data;
 using KTU_forum.Models;
 using System;
 using System.Threading.Tasks;
+using KTU_forum.Services;
 
 namespace KTU_forum
 {
@@ -66,6 +67,8 @@ namespace KTU_forum
 
 
             services.AddSingleton<KTU_forum.Services.OnlineUserService>();
+            services.AddScoped<RoleService>();
+            services.AddHostedService<RoleUpdateService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

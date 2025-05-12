@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using BCrypt.Net;
 using System.Linq;
 using KTU_forum.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace KTU_forum.Pages
 {
@@ -50,7 +51,7 @@ namespace KTU_forum.Pages
             }
 
             // Retrieve the current user from the database
-            CurrentUser = _context.Users.FirstOrDefault(u => u.Username == loggedInUsername);
+            CurrentUser = _context.Users.Include(u => u.PrimaryRole).FirstOrDefault(u => u.Username == loggedInUsername);
 
             if (CurrentUser == null)
             {

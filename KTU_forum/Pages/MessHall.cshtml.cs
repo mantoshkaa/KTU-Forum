@@ -32,6 +32,7 @@ namespace KTU_forum.Pages
             public string ReplyToContent { get; set; }
             public bool hasLiked {  get; set; }
             public bool IsEdited { get; set; }
+            public string SenderRoleColor { get; set; }
         }
         public List<MessageViewModel> Messages { get; set; }
         public MessHallModel(ApplicationDbContext context)
@@ -75,9 +76,11 @@ namespace KTU_forum.Pages
             Messages = _context.Messages
                 .Where(m => m.Room.Name == RoomName) // Only messages for this room
                 .Include(m => m.User)
+                    .ThenInclude(u => u.PrimaryRole)  // Include the primary role
                 .Include(m => m.Likes)
                 .Include(m => m.ReplyTo)
                     .ThenInclude(r => r.User) // Include the user of the message being replied to
+                        .ThenInclude(u => u.PrimaryRole)  // Include primary role for reply user
                 .OrderByDescending(m => m.SentAt)
                 .Take(50)
                 .OrderBy(m => m.SentAt)
@@ -88,7 +91,8 @@ namespace KTU_forum.Pages
                     SentAt = m.SentAt,
                     SenderUsername = m.User.Username,
                     SenderProfilePic = m.User.ProfilePicturePath,
-                    SenderRole = m.User.Role,
+                    SenderRole = m.User.PrimaryRole != null ? m.User.PrimaryRole.Name : m.User.Role,
+                    SenderRoleColor = m.User.PrimaryRole != null ? m.User.PrimaryRole.Color : "#6c757d",
                     LikesCount = m.Likes.Count,
 
                     // Reply information

@@ -3,6 +3,7 @@ using KTU_forum.Models;
 using KTU_forum.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 
@@ -30,7 +31,7 @@ namespace KTU_forum.Pages
             }
 
             // Retrieve the requested user from the database
-            ProfileUser = _context.Users.FirstOrDefault(u => u.Username == username);
+            ProfileUser = _context.Users.Include(u => u.PrimaryRole).FirstOrDefault(u => u.Username == username);
 
             if (ProfileUser == null)
             {

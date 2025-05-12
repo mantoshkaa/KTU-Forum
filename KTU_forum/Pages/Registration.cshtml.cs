@@ -14,6 +14,8 @@ using MimeKit;
 using MailKit.Security;
 using System.Configuration;
 using Microsoft.Extensions.Configuration;
+using KTU_forum.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace KTU_forum.Pages
@@ -84,7 +86,7 @@ namespace KTU_forum.Pages
             NewUser.PasswordHash = hashedPassword; // Store the hashed password in the database
 
             // Add this line to set the role based on email
-            NewUser.Role = adminEmails.Contains(NewUser.Email) ? "Admin" : "Student";
+            NewUser.Role = adminEmails.Contains(NewUser.Email) ? "Admin" : null;
 
             string token = Guid.NewGuid().ToString(); // or use any secure generator
             NewUser.EmailVerificationToken = token;
@@ -94,6 +96,9 @@ namespace KTU_forum.Pages
             // Save the user 
             _context.Users.Add(NewUser);
             _context.SaveChanges();
+
+            var roleService = HttpContext.RequestServices.GetService<RoleService>();
+            await roleService.UpdateUserRoles(NewUser.Id);
 
             // Generate verification URL
             var verificationUrl = Url.Page(

@@ -37,6 +37,13 @@ namespace KTU_forum.Models
         public List<ReplyModel> Replies { get; set; } = new(); // One user -> many replies
         public ICollection<MessageModel> Messages { get; set; }
 
+        // Add this to UserModel.cs
+        public List<UserRoleModel> UserRoles { get; set; } = new();
+
+        // For primary role display (the role that will be shown in UI)
+        public int? PrimaryRoleId { get; set; }
+        public RoleModel PrimaryRole { get; set; }
+
 
     }
 }

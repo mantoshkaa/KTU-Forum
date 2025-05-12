@@ -7,16 +7,20 @@ using KTU_forum.Models;
 using System;
 using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
+using KTU_forum.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace KTU_forum.Hubs
 {
     public class ChatHub : Hub
     {
         private readonly ApplicationDbContext _dbContext;
+        private readonly IServiceProvider _serviceProvider;
 
-        public ChatHub(ApplicationDbContext dbContext)
+        public ChatHub(ApplicationDbContext dbContext, IServiceProvider serviceProvider)
         {
             _dbContext = dbContext;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task SendMessage(string username, string roomName, string message, string role = null)
@@ -32,9 +36,13 @@ namespace KTU_forum.Hubs
                     return;
                 }
 
+                // Update user roles
+                var roleService = _serviceProvider.GetRequiredService<RoleService>();
+                var (roleChanged, newRoleName, newRoleColor) = await roleService.UpdateUserRoles(user.Id);
+
+
                 // Find the room by name
                 var room = _dbContext.Rooms.FirstOrDefault(r => r.Name == roomName);
-
                 if (room == null)
                 {
                     await Clients.Caller.SendAsync("ErrorMessage", "Room not found");
@@ -43,7 +51,14 @@ namespace KTU_forum.Hubs
 
                 if (string.IsNullOrEmpty(role) && user != null)
                 {
-                    role = user.Role;
+                    if (roleChanged)
+                    {
+                        role = newRoleName; // Use the updated role
+                    }
+                    else
+                    {
+                        role = user.Role;
+                    }
                 }
 
                 // Create and save message to database with userId and roomId
@@ -57,14 +72,17 @@ namespace KTU_forum.Hubs
                     Likes = new List<LikeModel>() // Initialize empty likes collection
                 };
 
+                
+
                 _dbContext.Messages.Add(newMessage);
                 await _dbContext.SaveChangesAsync();
 
-                // Broadcast the message to all clients in that room
-                await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message, user.ProfilePicturePath ?? "/profile-pictures/default.png", role);
+                await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message, user.ProfilePicturePath ?? "/profile-pictures/default.png", role, newMessage.Id, newRoleColor);
 
-                // Also send the new message ID back to the client
-                await Clients.Caller.SendAsync("MessageSent", newMessage.Id);
+                if (roleChanged)
+                {
+                    await Clients.User(username).SendAsync("RoleUpdated", newRoleName, newRoleColor);
+                }
             }
             catch (Exception ex)
             {
@@ -157,6 +175,9 @@ namespace KTU_forum.Hubs
                     return;
                 }
 
+                var roleService = _serviceProvider.GetRequiredService<RoleService>();
+                var (roleChanged, newRoleName, newRoleColor) = await roleService.UpdateUserRoles(user.Id);
+
                 // Find the room by name
                 var room = _dbContext.Rooms.FirstOrDefault(r => r.Name == roomName);
 
@@ -177,9 +198,17 @@ namespace KTU_forum.Hubs
                     return;
                 }
 
+                // Use updated role if available
                 if (string.IsNullOrEmpty(role) && user != null)
                 {
-                    role = user.Role;
+                    if (roleChanged)
+                    {
+                        role = newRoleName; // Use the updated role
+                    }
+                    else
+                    {
+                        role = user.Role;
+                    }
                 }
 
                 // Create and save message to database with userId, roomId, and replyToId
@@ -208,6 +237,11 @@ namespace KTU_forum.Hubs
                 await Clients.Group(roomName).SendAsync("ReceiveReply",
                     username, message, profilePic, role, newMessage.Id,
                     replyToId, originalSender, originalContent);
+
+                if (roleChanged)
+                {
+                    await Clients.User(username).SendAsync("RoleUpdated", newRoleName, newRoleColor);
+                }
             }
             catch (Exception ex)
             {

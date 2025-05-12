@@ -71,7 +71,7 @@
                                     @message.SenderUsername
                                     @if (!string.IsNullOrEmpty(message.SenderRole))
                                     {
-                                        <span class="badge bg-success text-white ms-1" style="opacity: 0.4; font-size: 0.75rem;">@message.SenderRole</span>
+                                        <span class="badge text-white ms-1" style="opacity: 0.7; font-size: 0.75rem; background-color: @(message.SenderRoleColor ?? "#6c757d");">@message.SenderRole</span>
                                     }
                                     • @formattedTime
                                 </small>
@@ -183,6 +183,68 @@
             console.error("SignalR Connection Error:", err.toString());
         });
 
+        connection.on("UpdateLikes", function (messageId, likeCount) {
+        console.log("Received UpdateLikes:", messageId, likeCount);
+        const likesCountElement = document.getElementById("likes-" + messageId);
+        if (likesCountElement) {
+            if (likeCount > 0) {
+                likesCountElement.innerHTML = `<i class="bi bi-hand-thumbs-up-fill"></i> ${likeCount}`;
+            } else {
+                likesCountElement.innerHTML = '';
+            }
+        }
+    });
+
+        // Add this new handler for role updates
+    connection.on("RoleUpdated", function (roleName, roleColor) {
+        console.log("Role updated to:", roleName, roleColor);
+
+        // Update the current user's role variable
+        userRole = roleName;
+
+        // Update all of the current user's messages in the chat
+        // In your HTML, roles are inside a badge element within small.text-muted
+        document.querySelectorAll(`#messagesList li`).forEach(messageItem => {
+            // Find username text to check if it's the current user's message
+            const usernameElement = messageItem.querySelector('small.text-muted');
+            if (usernameElement && usernameElement.textContent.trim().startsWith(username)) {
+                // Find the badge that contains the role
+                const badgeElement = usernameElement.querySelector('.badge');
+                if (badgeElement) {
+                    badgeElement.textContent = roleName;
+                    badgeElement.style.backgroundColor = roleColor;
+                }
+            }
+        });
+
+        // Create and show a notification
+        // First, check if notification area exists, create it if it doesn't
+        let notificationArea = document.getElementById('notification-area');
+        if (!notificationArea) {
+            notificationArea = document.createElement('div');
+            notificationArea.id = 'notification-area';
+            notificationArea.style.position = 'fixed';
+            notificationArea.style.top = '10px';
+            notificationArea.style.right = '10px';
+            notificationArea.style.zIndex = '1000';
+            document.body.appendChild(notificationArea);
+        }
+
+        // Create the notification
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-info';
+        notification.innerHTML = `Your role has been updated to <strong>${roleName}</strong>!`;
+        notification.style.opacity = '0.9';
+        notification.style.minWidth = '250px';
+        notification.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+        notificationArea.appendChild(notification);
+
+        // Remove the notification after 5 seconds
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    });
+
     // Handle like updates from server
     connection.on("UpdateLikes", function (messageId, likeCount) {
         console.log("Received UpdateLikes:", messageId, likeCount);
@@ -292,21 +354,21 @@
         const minutes = currentDate.getMinutes().toString().padStart(2, '0');
         const formattedDate = `${year}-${month}-${day} | ${hours}:${minutes}`;
 
-        // Create the username and role part
-        meta.innerHTML = `${user}`;
+        // Create the username text node first
+        meta.appendChild(document.createTextNode(user));
 
         // Add role badge if role exists
         if (role) {
-            const roleBadge = document.createElement("span");
-            roleBadge.classList.add("badge", "bg-success", "text-white", "ms-1");
-            roleBadge.style.opacity = "0.4";
-            roleBadge.style.fontSize = "0.75rem";
-            roleBadge.textContent = role;
-            meta.appendChild(roleBadge);
+        const badge = document.createElement("span");
+        badge.classList.add("badge", "ms-2");
+        badge.textContent = role;
+        if (roleColor) {
+            badge.style.backgroundColor = roleColor;
         }
-
+        meta.appendChild(badge);
+    }
         // Add the timestamp
-        meta.innerHTML += ` • ${formattedDate}`;
+        meta.appendChild(document.createTextNode(` • ${formattedDate}`));
 
         const messageText = document.createElement("p");
         messageText.classList.add("mb-1");
@@ -390,6 +452,19 @@
         scrollToBottom();
     });
 
+    // Add this helper function to map roles to their colors
+    function getRoleColor(role) {
+        const roleColors = {
+            'Admin': '#FF5733',
+            'Newcomer': '#A7C7E7',
+            'Member': '#77DD77',
+            'Regular': '#FFB347',
+            'Senior': '#9370DB',
+            'Expert': '#FF6961'
+        };
+
+        return roleColors[role] || '#6c757d'; // Default gray if role not found
+    }
     connection.on("ReceiveReply", function (user, message, profilePic, role, messageId, replyToId, originalSender, originalContent) {
         const messagesList = document.getElementById("messagesList");
         const messageItem = document.createElement("li");

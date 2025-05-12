@@ -16,6 +16,8 @@ namespace KTU_forum.Data
         public DbSet<LikeModel> Likes { get; set; }
         public DbSet<PrivateMessageModel> PrivateMessages { get; set; }
         public DbSet<ConversationModel> Conversations { get; set; }
+        public DbSet<RoleModel> Roles { get; set; }
+        public DbSet<UserRoleModel> UserRoles { get; set; }
 
         // just for clarity control, since there are multiple relationships related to replies and messages
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -100,6 +102,27 @@ namespace KTU_forum.Data
                 .WithMany()
                 .HasForeignKey(c => c.User2Id)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure many-to-many relationship between Users and Roles
+            modelBuilder.Entity<UserRoleModel>()
+                .HasKey(ur => new { ur.UserId, ur.RoleId });
+
+            modelBuilder.Entity<UserRoleModel>()
+                .HasOne(ur => ur.User)
+                .WithMany(u => u.UserRoles)
+                .HasForeignKey(ur => ur.UserId);
+
+            modelBuilder.Entity<UserRoleModel>()
+                .HasOne(ur => ur.Role)
+                .WithMany(r => r.UserRoles)
+                .HasForeignKey(ur => ur.RoleId);
+
+            // Configure PrimaryRole relationship
+            modelBuilder.Entity<UserModel>()
+                .HasOne(u => u.PrimaryRole)
+                .WithMany()
+                .HasForeignKey(u => u.PrimaryRoleId)
+                .OnDelete(DeleteBehavior.SetNull);
 
         }
 
