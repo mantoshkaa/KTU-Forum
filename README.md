@@ -8,5 +8,5 @@ Pagrindinės funkcijos:
 * Galimybė siųsti privačias žinutes tarp vartotojų
 * Vartotojo profilio personalizacija (profilio nuotrauka, prisistatymas, slapyvardis)
 
-Skirtingi vaidmenys: administratorius, pagalbininkas, narys, naujienų pranešėjas ir kt.
+Skirtingi vartotojo vaidmenys: administratorius, paprastas vartotojas...
 
