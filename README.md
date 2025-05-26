@@ -8,5 +8,13 @@ Pagrindinės funkcijos:
 * Galimybė siųsti privačias žinutes tarp vartotojų
 * Vartotojo profilio personalizacija (profilio nuotrauka, prisistatymas, slapyvardis)
 
-Skirtingi vartotojo vaidmenys: administratorius, paprastas vartotojas...
+
+Skirtingi vartotojo vaidmenys: 
+* Naujokas - be jokio aktyvumo(įrašo, žinučių)
+* Narys
+* Reguliarus narys (bent 10 įrašų)
+* Vyresnysis narys - aktyvus narys virš mėnesio
+* Ekspertas - išrinktas administratorių, aktyviai prisidedantis prie bendruomenės savo išmintimi bei iniciatyva.
+* Administratorius
+  
 
