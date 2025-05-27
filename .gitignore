@@ -361,6 +361,3 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-
-# Ignore development settings with sensitive data
-KTU_forum/appsettings.Development.json
