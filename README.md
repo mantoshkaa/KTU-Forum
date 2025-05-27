@@ -15,6 +15,10 @@ Skirtingi vartotojo vaidmenys:
 * Reguliarus narys (bent 10 įrašų)
 * Vyresnysis narys - aktyvus narys virš mėnesio
 * Ekspertas - išrinktas administratorių, aktyviai prisidedantis prie bendruomenės savo išmintimi bei iniciatyva.
-* Administratorius
+* Administratorius  
+
+
+______________________________________________________________________________
+Detalesnė informacija apie projekta ir patį produktą rasite mūsų wiki puslapyje.
   
 
